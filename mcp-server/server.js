@@ -9,6 +9,7 @@ import { generateDocs } from './tools/documentation.js';
 import { deployDevnet, getDeploymentStatus, fundKeypair } from './tools/deploy.js';
 import { verifyDiscriminators, getInstructionSignature } from './tools/verify-discriminator.js';
 import { verifyOnchainDiscriminators } from './tools/verify-onchain-discriminators.js';
+import { analyzeErrors } from './tools/error-analysis.js';
 
 const TOOLS = [
   {
@@ -199,6 +200,29 @@ const TOOLS = [
       },
       required: ['programId']
     }
+  },
+  {
+    name: 'analyze_errors',
+    description: 'Analyze Anchor/Rust compiler errors and provide actionable fixes',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        errorOutput: {
+          type: 'string',
+          description: 'Raw compiler error output or error message'
+        },
+        errorType: {
+          type: 'string',
+          enum: ['compilation', 'runtime', 'test'],
+          description: 'Type of error (default: compilation)'
+        },
+        projectPath: {
+          type: 'string',
+          description: 'Path to project root (optional)'
+        }
+      },
+      required: ['errorOutput']
+    }
   }
 ];
 
@@ -263,6 +287,9 @@ export async function createServer() {
                 break;
               case 'verify_onchain_discriminators':
                 result = await verifyOnchainDiscriminators(args);
+                break;
+              case 'analyze_errors':
+                result = await analyzeErrors(args);
                 break;
               default:
                 throw new Error(`Unknown tool: ${name}`);
