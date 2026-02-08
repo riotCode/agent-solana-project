@@ -22,10 +22,7 @@
   "author": "Riot Agent <riot@hackathon.agent>",
   "license": "MIT",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.32.0",
-    "@solana/web3.js": "^1.99.0",
-    "@solana/kit": "^0.3.0",
-    "commander": "^12.1.0"
+    "@solana/web3.js": "^1.98.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"

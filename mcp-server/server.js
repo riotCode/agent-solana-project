@@ -8,6 +8,7 @@ import { setupTesting } from './tools/testing.js';
 import { generateDocs } from './tools/documentation.js';
 import { deployDevnet, getDeploymentStatus, fundKeypair } from './tools/deploy.js';
 import { verifyDiscriminators, getInstructionSignature } from './tools/verify-discriminator.js';
+import { verifyOnchainDiscriminators } from './tools/verify-onchain-discriminators.js';
 
 const TOOLS = [
   {
@@ -175,6 +176,29 @@ const TOOLS = [
       },
       required: ['idlPath', 'instructionName']
     }
+  },
+  {
+    name: 'verify_onchain_discriminators',
+    description: 'Verify program exists on-chain and fetch its IDL',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        programId: {
+          type: 'string',
+          description: 'Program ID (public key)'
+        },
+        cluster: {
+          type: 'string',
+          enum: ['devnet', 'testnet', 'mainnet'],
+          description: 'Solana cluster'
+        },
+        rpcUrl: {
+          type: 'string',
+          description: 'Custom RPC URL (optional)'
+        }
+      },
+      required: ['programId']
+    }
   }
 ];
 
@@ -236,6 +260,9 @@ export async function createServer() {
                 break;
               case 'get_instruction_signature':
                 result = await getInstructionSignature(args);
+                break;
+              case 'verify_onchain_discriminators':
+                result = await verifyOnchainDiscriminators(args);
                 break;
               default:
                 throw new Error(`Unknown tool: ${name}`);
