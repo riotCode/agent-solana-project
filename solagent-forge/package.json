@@ -1,0 +1,37 @@
+{
+  "name": "@riotagent/solagent-forge",
+  "version": "0.1.0",
+  "description": "Autonomous Solana development companion - intelligent scaffolding, testing, and documentation",
+  "main": "mcp-server/index.js",
+  "type": "module",
+  "scripts": {
+    "mcp": "node mcp-server/index.js",
+    "test": "node --test tests/*.test.js",
+    "build": "anchor build",
+    "dev": "nodemon mcp-server/index.js"
+  },
+  "keywords": [
+    "solana",
+    "anchor",
+    "mcp",
+    "ai-agent",
+    "development-tools",
+    "testing",
+    "documentation"
+  ],
+  "author": "Riot Agent <riot@hackathon.agent>",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.0",
+    "@solana/web3.js": "^1.99.0",
+    "@solana/kit": "^0.3.0",
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/riotCode/agent-solana-project"
+  }
+}
