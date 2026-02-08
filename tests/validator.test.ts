@@ -1,0 +1,1 @@
+// Use standard Anchor test setup with solana-test-validator
