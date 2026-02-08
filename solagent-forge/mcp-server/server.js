@@ -6,6 +6,7 @@
 import { scaffoldProgram } from './tools/scaffold.js';
 import { setupTesting } from './tools/testing.js';
 import { generateDocs } from './tools/documentation.js';
+import { deployDevnet, getDeploymentStatus, fundKeypair } from './tools/deploy.js';
 
 const TOOLS = [
   {
@@ -60,6 +61,74 @@ const TOOLS = [
       },
       required: ['idlPath']
     }
+  },
+  {
+    name: 'deploy_devnet',
+    description: 'Deploy Anchor program to Solana devnet',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        programPath: {
+          type: 'string',
+          description: 'Path to Anchor project root'
+        },
+        cluster: {
+          type: 'string',
+          enum: ['devnet', 'testnet', 'mainnet-beta'],
+          description: 'Solana cluster'
+        },
+        keypair: {
+          type: 'string',
+          description: 'Path to keypair file (optional, uses default if not provided)'
+        },
+        skipBuild: {
+          type: 'boolean',
+          description: 'Skip anchor build step'
+        }
+      }
+    }
+  },
+  {
+    name: 'get_deployment_status',
+    description: 'Check deployment status of a program on-chain',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        programId: {
+          type: 'string',
+          description: 'Program ID (public key)'
+        },
+        cluster: {
+          type: 'string',
+          enum: ['devnet', 'testnet', 'mainnet-beta'],
+          description: 'Solana cluster'
+        }
+      },
+      required: ['programId']
+    }
+  },
+  {
+    name: 'fund_keypair',
+    description: 'Airdrop SOL to a keypair on devnet for testing',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        publicKey: {
+          type: 'string',
+          description: 'Public key to receive SOL'
+        },
+        cluster: {
+          type: 'string',
+          enum: ['devnet', 'testnet'],
+          description: 'Solana cluster'
+        },
+        amount: {
+          type: 'number',
+          description: 'Amount of SOL to airdrop (default: 2)'
+        }
+      },
+      required: ['publicKey']
+    }
   }
 ];
 
@@ -106,6 +175,15 @@ export async function createServer() {
                 break;
               case 'generate_docs':
                 result = await generateDocs(args);
+                break;
+              case 'deploy_devnet':
+                result = await deployDevnet(args);
+                break;
+              case 'get_deployment_status':
+                result = await getDeploymentStatus(args);
+                break;
+              case 'fund_keypair':
+                result = await fundKeypair(args);
                 break;
               default:
                 throw new Error(`Unknown tool: ${name}`);
