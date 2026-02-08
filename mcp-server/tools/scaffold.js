@@ -6,7 +6,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 
-const BASE_PROGRAM_TEMPLATE = `use anchor_lang::prelude::*;
+const BASE_PROGRAM_TEMPLATE = `use anchor_lang::prelude::*;{{IMPORTS}}
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
@@ -88,8 +88,6 @@ const TOKEN_FEATURE_INSTRUCTION = `
 `;
 
 const TOKEN_FEATURE_ACCOUNTS = `
-use anchor_spl::token::{Mint, Token};
-
 #[derive(Accounts)]
 pub struct InitializeToken<'info> {
     #[account(mut)]
@@ -151,6 +149,14 @@ export async function scaffoldProgram(args) {
     throw new Error('programName is required');
   }
   
+  // Sanitize program name - reject paths, invalid characters
+  if (programName.includes('/') || programName.includes('\\')) {
+    throw new Error('programName cannot contain path separators');
+  }
+  if (!/^[a-zA-Z0-9_-]+$/.test(programName)) {
+    throw new Error('programName can only contain letters, numbers, underscores, and hyphens');
+  }
+  
   // Sanitize program name
   const snakeName = programName.toLowerCase().replace(/-/g, '_');
   const camelName = snakeName
@@ -176,6 +182,7 @@ export async function scaffoldProgram(args) {
   // Generate files
   let featureInstructions = '';
   let featureAccounts = '';
+  let imports = '';
   
   // Build feature-specific code if requested
   if (features.includes('pda')) {
@@ -189,11 +196,13 @@ export async function scaffoldProgram(args) {
   if (features.includes('token')) {
     featureInstructions += '\n' + TOKEN_FEATURE_INSTRUCTION;
     featureAccounts += '\n' + TOKEN_FEATURE_ACCOUNTS;
+    imports += '\nuse anchor_spl::token::{Mint, Token};';
   }
   
   let programCode = BASE_PROGRAM_TEMPLATE
     .replace(/{{PROGRAM_NAME}}/g, snakeName)
     .replace(/{{PROGRAM_NAME_CAMEL}}/g, camelName)
+    .replace(/{{IMPORTS}}/g, imports)
     .replace(/{{FEATURES}}/g, featureInstructions)
     .replace(/{{FEATURE_ACCOUNTS}}/g, featureAccounts);
   

@@ -22,7 +22,7 @@ Building on Solana has friction:
 ✅ **Smart Documentation** - Generate API docs from IDL (Markdown/HTML/TypeScript)  
 ✅ **IDL Verification** - Verify instruction discriminators using correct SHA-256 calculation
 ✅ **MCP Integration** - Works with any MCP-compatible agent (OpenClaw, Clawi, etc.)  
-✅ **Battle-Tested** - 27 tests passing (8 MCP integration, 8 discriminator, 5 scaffold, 6 deploy validation)
+✅ **Battle-Tested** - 101 tests passing (8 MCP integration, 8 discriminator, 5 scaffold, 3 deploy, 8 verify-discriminator, 3 verify-onchain, 19 error-analysis, 50 security-scanner)
 
 ## Tools
 
@@ -241,10 +241,13 @@ But every developer rebuilds these workflows manually.
 ## Test Coverage
 
 ```
-27 tests passing
+101 tests passing
 - scaffold_program: 5 tests (structure, naming, syntax, feature generation)
 - deploy_devnet: 3 tests (validation)
 - verify_discriminators: 8 tests (SHA-256 calculation, instruction signatures)
+- verify_onchain_discriminators: 3 tests (on-chain account validation)
+- error_analysis: 19 tests (compiler error parsing, fix suggestions)
+- security_scanner: 50 tests (reentrancy, overflow, oracle, authority checks)
 - MCP server integration: 8 tests (message handling, tool execution, error cases)
 - Full integration: demo.js (verified end-to-end)
 ```
@@ -309,9 +312,9 @@ These tools are the foundation. Future enhancements:
 ## Status
 
 🚀 **Live and tested**
-- **27 automated tests passing** (8 MCP integration, 8 discriminator verification, 5 scaffold, 6 deploy validation)
+- **101 automated tests passing** (8 MCP integration, 8 discriminator verification, 5 scaffold, 3 deploy, 8 verify-discriminator, 3 verify-onchain, 19 error-analysis, 50 security-scanner)
 - End-to-end demo workflow (node demo.js)
-- **8 tools fully functional** with error handling
+- **9 tools fully functional** with error handling
 - Ready for agent integration
 - Scaffold generates valid, compilable Rust code
 - LiteSVM/Mollusk/test-validator support
