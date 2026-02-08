@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Generated sample projects
+token-vault/
+test-program/
+syntax-test/
+demo-output/
+
+# Anchor build artifacts
+target/
+dist/
+build/
+
+# Node
+.env
+.env.local
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log

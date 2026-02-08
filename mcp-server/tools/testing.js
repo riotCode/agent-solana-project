@@ -6,7 +6,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 
-const LITESVM_TEST_TEMPLATE = `import { LiteSVM } from "@lightprotocol/litesvm";
+const LITESVM_TEST_TEMPLATE = `import { LiteSVM } from "litesvm";
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 
@@ -16,22 +16,22 @@ describe("{{PROGRAM_NAME}} with LiteSVM", () => {
   let program: Program;
 
   before(async () => {
-    // Initialize LiteSVM for fast in-memory testing
-    svm = await LiteSVM.init();
+    // Initialize LiteSVM for fast in-memory testing (<100ms per test)
+    svm = new LiteSVM();
     
-    // Configure Anchor provider
-    const connection = new anchor.web3.Connection(svm.getRpcUrl());
+    // Configure Anchor provider with LiteSVM's internal RPC
+    const connection = svm.connection;
     const wallet = anchor.Wallet.local();
     provider = new anchor.AnchorProvider(connection, wallet, {});
     anchor.setProvider(provider);
-  });
-
-  after(async () => {
-    await svm.stop();
+    
+    // Load your program here:
+    // const program = anchor.workspace.{{PROGRAM_NAME}};
   });
 
   it("Runs tests quickly with LiteSVM", async () => {
     // Your test code here
+    // LiteSVM tests complete in milliseconds with no validator needed
   });
 });
 `;

@@ -6,9 +6,9 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 
-const PROGRAM_TEMPLATE = `use anchor_lang::prelude::*;
+const BASE_PROGRAM_TEMPLATE = `use anchor_lang::prelude::*;
 
-declare_id!("11111111111111111111111111111111");
+declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
 pub mod {{PROGRAM_NAME}} {
@@ -22,6 +22,78 @@ pub mod {{PROGRAM_NAME}} {
 
 #[derive(Accounts)]
 pub struct Initialize {}
+`;
+
+const PDA_FEATURE = `
+#[derive(Accounts)]
+pub struct InitializeWithPda<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(
+        init,
+        pda,
+        space = 8 + 8, // discriminator + data
+        bump,
+        payer = payer
+    )]
+    pub state: Account<'info, State>,
+    pub system_program: Program<'info, System>,
+}
+
+#[account]
+pub struct State {
+    pub count: u64,
+}
+`;
+
+const CPI_FEATURE = `
+use anchor_lang::system_program::{transfer, Transfer};
+
+#[derive(Accounts)]
+pub struct InitializeWithCpi<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    /// CHECK: This is safe because we're just using it as a target for a transfer
+    #[account(mut)]
+    pub recipient: UncheckedAccount<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+pub fn cpi_transfer(ctx: Context<InitializeWithCpi>, amount: u64) -> Result<()> {
+    let transfer_accounts = Transfer {
+        from: ctx.accounts.payer.to_account_info(),
+        to: ctx.accounts.recipient.to_account_info(),
+    };
+    let cpi_ctx = CpiContext::new(ctx.accounts.system_program.to_account_info(), transfer_accounts);
+    transfer(cpi_ctx, amount)?;
+    Ok(())
+}
+`;
+
+const TOKEN_FEATURE = `
+use anchor_spl::token::{self, Mint, Token, TokenAccount};
+
+#[derive(Accounts)]
+pub struct InitializeToken<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(
+        init,
+        payer = payer,
+        mint::decimals = 6,
+        mint::authority = payer.key(),
+    )]
+    pub mint: Account<'info, Mint>,
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
+}
+
+pub fn mint_tokens(ctx: Context<InitializeToken>, amount: u64) -> Result<()> {
+    // Token minting logic would go here
+    msg!("Minting {} tokens", amount);
+    Ok(())
+}
 `;
 
 const TEST_TEMPLATE = `import * as anchor from "@coral-xyz/anchor";
@@ -84,9 +156,20 @@ export async function scaffoldProgram(args) {
   }
   
   // Generate files
-  const programCode = PROGRAM_TEMPLATE
+  let programCode = BASE_PROGRAM_TEMPLATE
     .replace(/{{PROGRAM_NAME}}/g, snakeName)
     .replace(/{{PROGRAM_NAME_CAMEL}}/g, camelName);
+  
+  // Add feature-specific code if requested
+  if (features.includes('pda')) {
+    programCode += '\n' + PDA_FEATURE;
+  }
+  if (features.includes('cpi')) {
+    programCode += '\n' + CPI_FEATURE;
+  }
+  if (features.includes('token')) {
+    programCode += '\n// NOTE: Add anchor-spl to Cargo.toml dependencies:\n// anchor-spl = "0.30.1"\n' + TOKEN_FEATURE;
+  }
   
   const testCode = TEST_TEMPLATE
     .replace(/{{PROGRAM_NAME}}/g, snakeName)
@@ -119,7 +202,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-${snakeName} = "11111111111111111111111111111111"
+${snakeName} = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
 
 [registry]
 url = "https://api.apr.dev"

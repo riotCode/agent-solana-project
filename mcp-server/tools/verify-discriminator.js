@@ -5,6 +5,7 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
+import { createHash } from 'crypto';
 
 export async function verifyDiscriminators(args) {
   const { 
@@ -78,31 +79,18 @@ export async function verifyDiscriminators(args) {
 
 /**
  * Calculate Anchor instruction discriminator (8-byte hash)
- * Based on Anchor's discriminator calculation: first 8 bytes of SHA256("namespace:instruction_name")
+ * Anchor's discriminator: first 8 bytes of SHA256("global:snake_case_instruction_name")
  */
 function calculateDiscriminator(namespace, instructionName) {
-  // For Anchor: SHA256(namespace + ":" + instruction_name)
-  // We'll use a simple hash for demonstration
-  // In production, you'd use crypto.createHash('sha256')
+  // Convert instructionName to snake_case (if not already)
+  const snakeName = instructionName.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
   
-  const text = `${namespace}:${instructionName}`;
+  // Anchor discriminator: SHA256("global:instruction_name")
+  const text = `global:${snakeName}`;
+  const hash = createHash('sha256').update(text).digest();
   
-  // Simple 8-byte discriminator (would be SHA256 in production)
-  // For now, just create a deterministic discriminator from the name
-  let hash = 0;
-  for (let i = 0; i < text.length; i++) {
-    const char = text.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  
-  // Convert to 8-byte buffer
-  const buffer = Buffer.alloc(8);
-  for (let i = 0; i < 8; i++) {
-    buffer[i] = (hash >> (i * 8)) & 0xFF;
-  }
-  
-  return buffer;
+  // Return first 8 bytes
+  return hash.slice(0, 8);
 }
 
 /**
