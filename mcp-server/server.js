@@ -282,7 +282,10 @@ export async function createServer() {
             };
           
           case 'tools/call':
-            const { name, arguments: args } = params;
+            if (!params || !params.name) {
+              throw new Error('tools/call requires params.name');
+            }
+            const { name, arguments: args = {} } = params;
             let result;
             
             switch (name) {
