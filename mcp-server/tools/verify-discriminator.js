@@ -94,29 +94,6 @@ function calculateDiscriminator(namespace, instructionName) {
 }
 
 /**
- * Extract potential discriminators from program account data
- * Look for patterns that match Anchor's discriminator format
- */
-function extractOnchainDiscriminators(data) {
-  const discriminators = [];
-  
-  // Scan through program data looking for 8-byte patterns
-  // that could be discriminators (simplified approach)
-  // In reality, you'd need to parse the program layout more carefully
-  
-  if (data.length < 8) {
-    return discriminators;
-  }
-  
-  // Return chunks of 8 bytes as potential discriminators
-  for (let i = 0; i < Math.min(data.length, 1000); i += 8) {
-    discriminators.push(data.slice(i, i + 8));
-  }
-  
-  return discriminators;
-}
-
-/**
  * Advanced: Get instruction data for a specific instruction from IDL
  */
 export async function getInstructionSignature(args) {

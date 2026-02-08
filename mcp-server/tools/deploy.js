@@ -3,6 +3,7 @@
  * Deploys Anchor programs to Solana devnet
  */
 
+import { PublicKey } from '@solana/web3.js';
 import { execSync } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -190,13 +191,15 @@ export async function fundKeypair(args) {
     throw new Error('publicKey is required');
   }
   
-  // Validate public key format (base58, ~44 chars)
-  if (!/^[1-9A-HJ-NP-Z]{44}$/.test(publicKey)) {
+  // Validate public key format using Solana's PublicKey constructor
+  try {
+    new PublicKey(publicKey);
+  } catch (e) {
     return {
       success: false,
       publicKey,
       error: 'Invalid Solana public key format',
-      message: `'${publicKey}' does not match valid base58 public key format (should be ~44 characters)`
+      message: `'${publicKey}' is not a valid Solana public key`
     };
   }
   

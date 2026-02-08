@@ -26,7 +26,8 @@ test('scaffold_program creates valid Anchor project structure', async (t) => {
       'programs/test_program/Cargo.toml',
       'tests/test_program.ts',
       'Anchor.toml',
-      'package.json'
+      'package.json',
+      'tsconfig.json'
     ]);
 
     // Verify files exist

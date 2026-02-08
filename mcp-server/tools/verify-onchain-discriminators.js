@@ -63,22 +63,30 @@ export async function verifyOnchainDiscriminators(args) {
     }
 
     // Try to fetch IDL from IDL account (if using Anchor)
-    const idlAddress = await getIdlAddress(pubkey);
-    const idlAccount = await connection.getAccountInfo(idlAddress);
-
     let idl = null;
     let idlFound = false;
 
-    if (idlAccount && idlAccount.data.length > 0) {
-      try {
-        // IDL is stored as msgpack in the data field
-        // Skip the first 8 bytes (discriminator) and decode the rest
-        idl = decodeAnchorIdl(idlAccount.data);
-        idlFound = true;
-      } catch (e) {
-        // IDL parsing failed, continue with analysis
-        console.log('Could not decode IDL:', e.message);
+    try {
+      const idlAddress = getIdlAddress(pubkey);
+      
+      if (idlAddress) {
+        const idlAccount = await connection.getAccountInfo(idlAddress);
+        
+        if (idlAccount && idlAccount.data.length > 0) {
+          try {
+            // IDL is stored as msgpack in the data field
+            // Skip the first 8 bytes (discriminator) and decode the rest
+            idl = decodeAnchorIdl(idlAccount.data);
+            idlFound = true;
+          } catch (e) {
+            // IDL parsing failed, continue with analysis
+            console.log('Could not decode IDL:', e.message);
+          }
+        }
       }
+    } catch (e) {
+      // IDL lookup failed, continue with program verification only
+      console.log('IDL lookup failed:', e.message);
     }
 
     return {
@@ -120,20 +128,22 @@ export async function verifyOnchainDiscriminators(args) {
 
 /**
  * Derive Anchor IDL account address (PDA)
- * Anchor stores IDL at: seeds = [b"idl", program_id]
+ * Anchor stores IDL at: seeds = [b"anchor:idl", program_id]
+ * with the program itself as the owner
  */
-async function getIdlAddress(programId) {
-  // IDL account is stored at a PDA derived from the program ID
-  // Anchor uses: seeds = [b"idl", program_id_bytes]
-  // owner = Anchor IDL program (default: anchor.idl.PROGRAM_ID)
-  
-  // For now, return the standard Anchor IDL account address
-  // This would normally require deriving the PDA properly
-  const anchorIdlProgramId = new PublicKey('anchor');
-  
-  // In practice, you'd use @coral-xyz/anchor to derive this
-  // For this tool, we'll return a marker to indicate it needs proper derivation
-  return new PublicKey('11111111111111111111111111111111');
+function getIdlAddress(programId) {
+  try {
+    // IDL account is a PDA owned by the program itself
+    // seeds = [b"anchor:idl", program_id_bytes]
+    const [idlAddress] = PublicKey.findProgramAddressSync(
+      [Buffer.from('anchor:idl'), programId.toBytes()],
+      programId
+    );
+    return idlAddress;
+  } catch (e) {
+    // If derivation fails, return null to indicate IDL lookup should be skipped
+    return null;
+  }
 }
 
 /**

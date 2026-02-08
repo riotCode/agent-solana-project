@@ -269,6 +269,33 @@ test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
     path.join(projectRoot, 'package.json'),
     JSON.stringify(packageJson, null, 2)
   );
+
+  // Create tsconfig.json for TypeScript compilation
+  const tsconfig = {
+    compilerOptions: {
+      target: 'ES2020',
+      module: 'ES2020',
+      lib: ['ES2020'],
+      moduleResolution: 'node',
+      strict: true,
+      esModuleInterop: true,
+      skipLibCheck: true,
+      forceConsistentCasingInFileNames: true,
+      resolveJsonModule: true,
+      declaration: true,
+      declarationMap: true,
+      sourceMap: true,
+      outDir: './dist',
+      rootDir: './'
+    },
+    include: ['tests/**/*.ts'],
+    exclude: ['node_modules', 'target']
+  };
+
+  await fs.writeFile(
+    path.join(projectRoot, 'tsconfig.json'),
+    JSON.stringify(tsconfig, null, 2)
+  );
   
   const featuresApplied = features.length > 0 
     ? `\nFeatures applied: ${features.join(', ')}\n  - PDA: Use seeds and bump constraints for derived accounts\n  - CPI: Cross-program invocation with System Program transfers\n  - Token: SPL token mint initialization (requires anchor-spl dependency)`
@@ -283,7 +310,8 @@ test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
       `programs/${snakeName}/Cargo.toml`,
       `tests/${snakeName}.ts`,
       'Anchor.toml',
-      'package.json'
+      'package.json',
+      'tsconfig.json'
     ],
     nextSteps: [
       `cd ${programName}`,

@@ -120,24 +120,51 @@ function generateMarkdown(idl) {
 }
 
 function generateHTML(idl) {
+  // Convert markdown to simple HTML
   const md = generateMarkdown(idl);
-  // Simple markdown to HTML conversion (in production, use a proper markdown parser)
+  let content = md
+    // Escape HTML special chars first
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    // Convert markdown headers to HTML
+    .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
+    .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
+    .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
+    // Convert inline code
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    // Convert code blocks
+    .replace(/```rust\n([\s\S]*?)\n```/g, '<pre><code>$1</code></pre>')
+    .replace(/```\n([\s\S]*?)\n```/g, '<pre><code>$1</code></pre>')
+    // Convert lists
+    .replace(/^\- (.*?)$/gm, '<li>$1</li>')
+    // Convert bold
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    // Convert line breaks
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+  
   let html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <title>${idl.name} Documentation</title>
   <style>
-    body { font-family: sans-serif; max-width: 800px; margin: 50px auto; padding: 0 20px; }
-    code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }
-    pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }
-    h1 { border-bottom: 2px solid #333; padding-bottom: 10px; }
-    h2 { margin-top: 40px; border-bottom: 1px solid #ddd; padding-bottom: 8px; }
-    h3 { margin-top: 30px; }
+    body { font-family: sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #333; }
+    code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: monospace; }
+    pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; border-left: 3px solid #0066cc; }
+    pre code { background: none; padding: 0; }
+    h1 { border-bottom: 3px solid #0066cc; padding-bottom: 10px; color: #0066cc; }
+    h2 { margin-top: 40px; border-bottom: 1px solid #ddd; padding-bottom: 8px; color: #333; }
+    h3 { margin-top: 25px; color: #555; }
+    li { list-style: none; padding: 5px 0; margin-left: 20px; }
+    li:before { content: "• "; color: #0066cc; font-weight: bold; margin-right: 8px; }
+    strong { color: #0066cc; font-weight: 600; }
+    p { margin: 10px 0; }
   </style>
 </head>
 <body>
-${md.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+${content}
 </body>
 </html>`;
   
