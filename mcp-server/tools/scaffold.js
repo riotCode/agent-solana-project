@@ -306,8 +306,14 @@ test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
     JSON.stringify(tsconfig, null, 2)
   );
   
+  const featureDescriptions = {
+    pda: 'PDA: Use seeds and bump constraints for derived accounts',
+    cpi: 'CPI: Cross-program invocation with System Program transfers',
+    token: 'Token: SPL token mint initialization (requires anchor-spl dependency)'
+  };
+  
   const featuresApplied = features.length > 0 
-    ? `\nFeatures applied: ${features.join(', ')}\n  - PDA: Use seeds and bump constraints for derived accounts\n  - CPI: Cross-program invocation with System Program transfers\n  - Token: SPL token mint initialization (requires anchor-spl dependency)`
+    ? `\nFeatures applied: ${features.join(', ')}\n${features.map(f => `  - ${featureDescriptions[f] || f}`).join('\n')}`
     : '';
   
   return {

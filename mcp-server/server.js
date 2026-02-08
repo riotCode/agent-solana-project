@@ -26,7 +26,7 @@ const TOOLS = [
         features: {
           type: 'array',
           items: { type: 'string' },
-          description: 'Features to include: ["pda", "cpi", "token", "nft"]'
+          description: 'Features to include: ["pda", "cpi", "token"]'
         }
       },
       required: ['programName']
