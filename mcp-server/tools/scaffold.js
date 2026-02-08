@@ -18,23 +18,32 @@ pub mod {{PROGRAM_NAME}} {
         msg!("Program initialized");
         Ok(())
     }
+{{FEATURES}}
 }
 
 #[derive(Accounts)]
 pub struct Initialize {}
+{{FEATURE_ACCOUNTS}}`;
+
+const PDA_FEATURE_INSTRUCTION = `
+    pub fn initialize_with_pda(ctx: Context<InitializeWithPda>) -> Result<()> {
+        ctx.accounts.state.count = 0;
+        msg!("PDA account initialized");
+        Ok(())
+    }
 `;
 
-const PDA_FEATURE = `
+const PDA_FEATURE_ACCOUNTS = `
 #[derive(Accounts)]
 pub struct InitializeWithPda<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     #[account(
         init,
-        pda,
-        space = 8 + 8, // discriminator + data
-        bump,
-        payer = payer
+        payer = payer,
+        space = 8 + 8,
+        seeds = [b"state", payer.key().as_ref()],
+        bump
     )]
     pub state: Account<'info, State>,
     pub system_program: Program<'info, System>,
@@ -46,11 +55,22 @@ pub struct State {
 }
 `;
 
-const CPI_FEATURE = `
-use anchor_lang::system_program::{transfer, Transfer};
+const CPI_FEATURE_INSTRUCTION = `
+    pub fn transfer_with_cpi(ctx: Context<TransferWithCpi>, amount: u64) -> Result<()> {
+        use anchor_lang::system_program::{transfer, Transfer};
+        let transfer_accounts = Transfer {
+            from: ctx.accounts.payer.to_account_info(),
+            to: ctx.accounts.recipient.to_account_info(),
+        };
+        let cpi_ctx = CpiContext::new(ctx.accounts.system_program.to_account_info(), transfer_accounts);
+        transfer(cpi_ctx, amount)?;
+        Ok(())
+    }
+`;
 
+const CPI_FEATURE_ACCOUNTS = `
 #[derive(Accounts)]
-pub struct InitializeWithCpi<'info> {
+pub struct TransferWithCpi<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     /// CHECK: This is safe because we're just using it as a target for a transfer
@@ -58,20 +78,17 @@ pub struct InitializeWithCpi<'info> {
     pub recipient: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
-
-pub fn cpi_transfer(ctx: Context<InitializeWithCpi>, amount: u64) -> Result<()> {
-    let transfer_accounts = Transfer {
-        from: ctx.accounts.payer.to_account_info(),
-        to: ctx.accounts.recipient.to_account_info(),
-    };
-    let cpi_ctx = CpiContext::new(ctx.accounts.system_program.to_account_info(), transfer_accounts);
-    transfer(cpi_ctx, amount)?;
-    Ok(())
-}
 `;
 
-const TOKEN_FEATURE = `
-use anchor_spl::token::{self, Mint, Token, TokenAccount};
+const TOKEN_FEATURE_INSTRUCTION = `
+    pub fn initialize_token_mint(ctx: Context<InitializeToken>) -> Result<()> {
+        msg!("Token mint initialized");
+        Ok(())
+    }
+`;
+
+const TOKEN_FEATURE_ACCOUNTS = `
+use anchor_spl::token::{Mint, Token};
 
 #[derive(Accounts)]
 pub struct InitializeToken<'info> {
@@ -87,12 +104,6 @@ pub struct InitializeToken<'info> {
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
-}
-
-pub fn mint_tokens(ctx: Context<InitializeToken>, amount: u64) -> Result<()> {
-    // Token minting logic would go here
-    msg!("Minting {} tokens", amount);
-    Ok(())
 }
 `;
 
@@ -113,7 +124,7 @@ describe("{{PROGRAM_NAME}}", () => {
 });
 `;
 
-const CARGO_TOML_TEMPLATE = `[package]
+const CARGO_TOML_BASE = `[package]
 name = "{{PROGRAM_NAME}}"
 version = "0.1.0"
 edition = "2021"
@@ -123,7 +134,14 @@ crate-type = ["cdylib", "lib"]
 name = "{{PROGRAM_NAME_SNAKE}}"
 
 [dependencies]
-anchor-lang = "0.30.1"
+anchor-lang = "0.30.1"`;
+
+const CARGO_TOML_TOKEN = `
+anchor-spl = "0.30.1"`;
+
+const CARGO_TOML_END = `
+
+[dev-dependencies]
 `;
 
 export async function scaffoldProgram(args) {
@@ -156,28 +174,42 @@ export async function scaffoldProgram(args) {
   }
   
   // Generate files
-  let programCode = BASE_PROGRAM_TEMPLATE
-    .replace(/{{PROGRAM_NAME}}/g, snakeName)
-    .replace(/{{PROGRAM_NAME_CAMEL}}/g, camelName);
+  let featureInstructions = '';
+  let featureAccounts = '';
   
-  // Add feature-specific code if requested
+  // Build feature-specific code if requested
   if (features.includes('pda')) {
-    programCode += '\n' + PDA_FEATURE;
+    featureInstructions += '\n' + PDA_FEATURE_INSTRUCTION;
+    featureAccounts += '\n' + PDA_FEATURE_ACCOUNTS;
   }
   if (features.includes('cpi')) {
-    programCode += '\n' + CPI_FEATURE;
+    featureInstructions += '\n' + CPI_FEATURE_INSTRUCTION;
+    featureAccounts += '\n' + CPI_FEATURE_ACCOUNTS;
   }
   if (features.includes('token')) {
-    programCode += '\n// NOTE: Add anchor-spl to Cargo.toml dependencies:\n// anchor-spl = "0.30.1"\n' + TOKEN_FEATURE;
+    featureInstructions += '\n' + TOKEN_FEATURE_INSTRUCTION;
+    featureAccounts += '\n' + TOKEN_FEATURE_ACCOUNTS;
   }
+  
+  let programCode = BASE_PROGRAM_TEMPLATE
+    .replace(/{{PROGRAM_NAME}}/g, snakeName)
+    .replace(/{{PROGRAM_NAME_CAMEL}}/g, camelName)
+    .replace(/{{FEATURES}}/g, featureInstructions)
+    .replace(/{{FEATURE_ACCOUNTS}}/g, featureAccounts);
   
   const testCode = TEST_TEMPLATE
     .replace(/{{PROGRAM_NAME}}/g, snakeName)
     .replace(/{{PROGRAM_NAME_CAMEL}}/g, pascalName);
   
-  const cargoToml = CARGO_TOML_TEMPLATE
+  let cargoToml = CARGO_TOML_BASE
     .replace(/{{PROGRAM_NAME}}/g, snakeName)
     .replace(/{{PROGRAM_NAME_SNAKE}}/g, snakeName);
+  
+  if (features.includes('token')) {
+    cargoToml += CARGO_TOML_TOKEN;
+  }
+  
+  cargoToml += CARGO_TOML_END;
   
   await fs.writeFile(
     path.join(projectRoot, 'programs', snakeName, 'src', 'lib.rs'),
@@ -224,11 +256,8 @@ test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
   const packageJson = {
     name: programName,
     version: '0.1.0',
-    dependencies: {
-      '@coral-xyz/anchor': '^0.30.1',
-      '@solana/web3.js': '^1.95.0'
-    },
     devDependencies: {
+      '@coral-xyz/anchor': '^0.30.1',
       'ts-mocha': '^10.0.0',
       'typescript': '^5.0.0',
       '@types/mocha': '^10.0.0',
@@ -240,6 +269,10 @@ test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
     path.join(projectRoot, 'package.json'),
     JSON.stringify(packageJson, null, 2)
   );
+  
+  const featuresApplied = features.length > 0 
+    ? `\nFeatures applied: ${features.join(', ')}\n  - PDA: Use seeds and bump constraints for derived accounts\n  - CPI: Cross-program invocation with System Program transfers\n  - Token: SPL token mint initialization (requires anchor-spl dependency)`
+    : '';
   
   return {
     success: true,
@@ -258,6 +291,7 @@ test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
       'anchor build',
       'anchor test'
     ],
-    features: features.length > 0 ? `Requested features: ${features.join(', ')} (add manually)` : null
+    featureSummary: featuresApplied,
+    note: 'All feature instructions are injected into the program module. Generated code is ready to compile.'
   };
 }

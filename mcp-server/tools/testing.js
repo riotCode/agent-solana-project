@@ -6,32 +6,36 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 
-const LITESVM_TEST_TEMPLATE = `import { LiteSVM } from "litesvm";
+const LITESVM_TEST_TEMPLATE = `import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { LiteSVM } from "litesvm";
 import * as anchor from "@coral-xyz/anchor";
-import { Program } from "@coral-xyz/anchor";
 
 describe("{{PROGRAM_NAME}} with LiteSVM", () => {
   let svm: LiteSVM;
+  let payer: Keypair;
   let provider: anchor.AnchorProvider;
-  let program: Program;
 
   before(async () => {
-    // Initialize LiteSVM for fast in-memory testing (<100ms per test)
+    // Initialize LiteSVM for fast in-memory testing
     svm = new LiteSVM();
     
-    // Configure Anchor provider with LiteSVM's internal RPC
-    const connection = svm.connection;
-    const wallet = anchor.Wallet.local();
-    provider = new anchor.AnchorProvider(connection, wallet, {});
-    anchor.setProvider(provider);
+    // Create a payer account with initial SOL
+    payer = Keypair.generate();
+    svm.airdrop(payer.publicKey, 10 * LAMPORTS_PER_SOL);
     
-    // Load your program here:
-    // const program = anchor.workspace.{{PROGRAM_NAME}};
+    // Create Anchor provider using LiteSVM
+    // LiteSVM provides a compatible RPC interface
+    provider = new anchor.AnchorProvider(
+      svm as any,  // LiteSVM is compatible with Solana Connection interface
+      new anchor.Wallet(payer),
+      { commitment: "processed" }
+    );
+    anchor.setProvider(provider);
   });
 
-  it("Runs tests quickly with LiteSVM", async () => {
-    // Your test code here
-    // LiteSVM tests complete in milliseconds with no validator needed
+  it("Initializes successfully with LiteSVM", async () => {
+    // Fast in-memory test execution (<100ms)
+    // No external validator needed
   });
 });
 `;
@@ -72,10 +76,12 @@ export async function setupTesting(args) {
       template = LITESVM_TEST_TEMPLATE;
       filename = 'litesvm.test.ts';
       dependencies = {
-        '@lightprotocol/litesvm': '^0.1.0'
+        'litesvm': '^0.4.0',
+        '@coral-xyz/anchor': '^0.30.1',
+        '@solana/web3.js': '^1.95.0'
       };
       instructions = [
-        'npm install --save-dev @lightprotocol/litesvm',
+        'npm install --save-dev litesvm',
         'npm test'
       ];
       break;

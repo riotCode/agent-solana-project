@@ -102,7 +102,7 @@ test('MCP Server integration', async (t) => {
     assert.strictEqual(result.jsonrpc, '2.0');
     const content = JSON.parse(result.result.content[0].text);
     assert.strictEqual(content.success, true);
-    assert(content.features, 'Should include features in response');
+    assert(content.featureSummary || content.features, 'Should include features in response');
   });
 
   await t.test('verify_discriminators tool is available', async () => {

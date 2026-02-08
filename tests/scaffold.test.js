@@ -65,7 +65,8 @@ test('scaffold_program creates valid Anchor project structure', async (t) => {
       )
     );
     assert.strictEqual(packageJson.name, 'test-program');
-    assert.ok(packageJson.dependencies['@coral-xyz/anchor']);
+    // Anchor is in devDependencies (for testing), not dependencies
+    assert.ok(packageJson.devDependencies['@coral-xyz/anchor']);
   });
 
   await t.test('with hyphenated name', async () => {

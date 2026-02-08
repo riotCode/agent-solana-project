@@ -181,6 +181,7 @@ export async function getDeploymentStatus(args) {
 
 /**
  * Fund a keypair on devnet
+ * Uses RPC-based faucet request (preferred) with fallback to solana CLI
  */
 export async function fundKeypair(args) {
   const { publicKey, cluster = 'devnet', amount = 2 } = args;
@@ -189,6 +190,52 @@ export async function fundKeypair(args) {
     throw new Error('publicKey is required');
   }
   
+  // Validate public key format (base58, ~44 chars)
+  if (!/^[1-9A-HJ-NP-Z]{44}$/.test(publicKey)) {
+    return {
+      success: false,
+      publicKey,
+      error: 'Invalid Solana public key format',
+      message: `'${publicKey}' does not match valid base58 public key format (should be ~44 characters)`
+    };
+  }
+  
+  // Try RPC-based funding first (more agent-friendly, no CLI dependency)
+  if (cluster === 'devnet') {
+    try {
+      const rpcUrl = 'https://api.devnet.solana.com';
+      const response = await fetch(rpcUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'requestAirdrop',
+          params: [publicKey, amount * 1_000_000_000]
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.result) {
+        return {
+          success: true,
+          publicKey,
+          cluster,
+          amountAirdropped: amount,
+          signature: data.result,
+          message: `Successfully airdropped ${amount} SOL to ${publicKey}`
+        };
+      } else if (data.error) {
+        // Fall through to CLI method below
+        console.log(`RPC airdrop failed (${data.error.message}), trying CLI...`);
+      }
+    } catch (e) {
+      console.log('RPC airdrop failed, trying CLI method...');
+    }
+  }
+  
+  // Fallback: Use solana CLI
   try {
     const output = execSync(`solana airdrop ${amount} ${publicKey} -u ${cluster}`, {
       encoding: 'utf8',
@@ -203,14 +250,14 @@ export async function fundKeypair(args) {
       cluster,
       amountAirdropped: amount,
       signature: signatureMatch ? signatureMatch[1] : null,
-      message: `Successfully airdropped ${amount} SOL to ${publicKey}`
+      message: `Successfully airdropped ${amount} SOL to ${publicKey} via solana CLI`
     };
   } catch (error) {
     return {
       success: false,
       publicKey,
       error: error.message,
-      message: `Airdrop failed: ${error.message}`
+      message: `Airdrop failed: ${error.message}. Install Solana CLI or use AgentWallet for on-chain funding.`
     };
   }
 }

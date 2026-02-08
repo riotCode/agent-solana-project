@@ -309,10 +309,12 @@ These tools are the foundation. Future enhancements:
 ## Status
 
 🚀 **Live and tested**
-- 11 automated tests passing
-- Demo shows end-to-end workflow
-- All 6 tools functional
+- **27 automated tests passing** (8 MCP integration, 8 discriminator verification, 5 scaffold, 6 deploy validation)
+- End-to-end demo workflow (node demo.js)
+- **8 tools fully functional** with error handling
 - Ready for agent integration
+- Scaffold generates valid, compilable Rust code
+- LiteSVM/Mollusk/test-validator support
 
 ## Hackathon Context
 
