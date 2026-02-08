@@ -13,6 +13,13 @@ test-integration/
 test-with-features/
 sample-*/
 demo-*/
+base-test/
+my-vault/
+nft-only-test/
+nft-test/
+token-mint/
+demo-vault/
+import-test/
 
 # Generated test files from documentation tool
 tests/*.ts
