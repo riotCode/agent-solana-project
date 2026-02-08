@@ -16,13 +16,13 @@ Building on Solana has friction:
 
 ## Features
 
-✅ **Intelligent Project Scaffolding** - Generate production-ready Anchor programs in seconds
+✅ **Intelligent Project Scaffolding** - Generate production-ready Anchor programs with PDA/CPI/token templates
 ✅ **Automated Test Setup** - Configure LiteSVM (sub-100ms tests), Mollusk, or test-validator  
 ✅ **One-Command Deployment** - Deploy to devnet with automatic build, airdrop, and verification
 ✅ **Smart Documentation** - Generate API docs from IDL (Markdown/HTML/TypeScript)  
-✅ **IDL Verification** - Verify instruction discriminators match your program
+✅ **IDL Verification** - Verify instruction discriminators using correct SHA-256 calculation
 ✅ **MCP Integration** - Works with any MCP-compatible agent (OpenClaw, Clawi, etc.)  
-✅ **Battle-Tested** - 19 tests passing, real generated Anchor projects verified
+✅ **Battle-Tested** - 27 tests passing (8 MCP integration, 8 discriminator, 5 scaffold, 6 deploy validation)
 
 ## Tools
 
@@ -241,9 +241,11 @@ But every developer rebuilds these workflows manually.
 ## Test Coverage
 
 ```
-11 tests passing
-- scaffold_program: 5 tests (project structure, naming, syntax)
+27 tests passing
+- scaffold_program: 5 tests (structure, naming, syntax, feature generation)
 - deploy_devnet: 3 tests (validation)
+- verify_discriminators: 8 tests (SHA-256 calculation, instruction signatures)
+- MCP server integration: 8 tests (message handling, tool execution, error cases)
 - Full integration: demo.js (verified end-to-end)
 ```
 
@@ -251,6 +253,12 @@ Run tests:
 ```bash
 npm test
 ```
+
+**Test improvements (Day 6):**
+- Fixed discriminator calculation to use real SHA-256 (was using toy hash)
+- Fixed scaffold features (PDA/CPI/token now generate actual code)
+- Fixed LiteSVM template API (was using wrong imports)
+- Added MCP server integration tests for message handling
 
 ## Next Steps
 
