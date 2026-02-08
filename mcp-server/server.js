@@ -7,6 +7,7 @@ import { scaffoldProgram } from './tools/scaffold.js';
 import { setupTesting } from './tools/testing.js';
 import { generateDocs } from './tools/documentation.js';
 import { deployDevnet, getDeploymentStatus, fundKeypair } from './tools/deploy.js';
+import { verifyDiscriminators, getInstructionSignature } from './tools/verify-discriminator.js';
 
 const TOOLS = [
   {
@@ -129,6 +130,51 @@ const TOOLS = [
       },
       required: ['publicKey']
     }
+  },
+  {
+    name: 'verify_discriminators',
+    description: 'Verify IDL discriminators match deployed program on-chain',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        idlPath: {
+          type: 'string',
+          description: 'Path to IDL JSON file (e.g., target/idl/my_program.json)'
+        },
+        programId: {
+          type: 'string',
+          description: 'Program ID on Solana (public key)'
+        },
+        cluster: {
+          type: 'string',
+          enum: ['devnet', 'testnet', 'mainnet-beta'],
+          description: 'Solana cluster'
+        },
+        rpcUrl: {
+          type: 'string',
+          description: 'Custom RPC URL (optional)'
+        }
+      },
+      required: ['idlPath', 'programId']
+    }
+  },
+  {
+    name: 'get_instruction_signature',
+    description: 'Get discriminator and signature for a specific instruction',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        idlPath: {
+          type: 'string',
+          description: 'Path to IDL JSON file'
+        },
+        instructionName: {
+          type: 'string',
+          description: 'Instruction name (e.g., "initialize")'
+        }
+      },
+      required: ['idlPath', 'instructionName']
+    }
   }
 ];
 
@@ -184,6 +230,12 @@ export async function createServer() {
                 break;
               case 'fund_keypair':
                 result = await fundKeypair(args);
+                break;
+              case 'verify_discriminators':
+                result = await verifyDiscriminators(args);
+                break;
+              case 'get_instruction_signature':
+                result = await getInstructionSignature(args);
                 break;
               default:
                 throw new Error(`Unknown tool: ${name}`);
