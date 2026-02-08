@@ -3,7 +3,7 @@ node_modules/
 package-lock.json
 yarn.lock
 
-# Generated sample/test projects (from scaffold_program tool)
+# Generated sample/test projects (from scaffold_program and testing tools)
 token-vault/
 test-program/
 syntax-test/
@@ -13,6 +13,13 @@ test-integration/
 test-with-features/
 sample-*/
 demo-*/
+
+# Generated test files from documentation tool
+tests/*.ts
+tests/*.rs
+docs/*.md
+docs/*.html
+docs/*.ts
 
 # Anchor build artifacts
 target/
