@@ -10,6 +10,7 @@ import { deployDevnet, getDeploymentStatus, fundKeypair } from './tools/deploy.j
 import { verifyDiscriminators, getInstructionSignature } from './tools/verify-discriminator.js';
 import { verifyOnchainDiscriminators } from './tools/verify-onchain-discriminators.js';
 import { analyzeErrors } from './tools/error-analysis.js';
+import { scanSecurity } from './tools/security-scanner.js';
 
 const TOOLS = [
   {
@@ -223,6 +224,30 @@ const TOOLS = [
       },
       required: ['errorOutput']
     }
+  },
+  {
+    name: 'scan_security',
+    description: 'Scan Anchor/Rust program code for security vulnerabilities',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        code: {
+          type: 'string',
+          description: 'Program source code to scan'
+        },
+        codeType: {
+          type: 'string',
+          enum: ['rust', 'typescript'],
+          description: 'Programming language (default: rust)'
+        },
+        severity: {
+          type: 'string',
+          enum: ['low', 'medium', 'high', 'critical'],
+          description: 'Minimum severity to report (default: medium)'
+        }
+      },
+      required: ['code']
+    }
   }
 ];
 
@@ -290,6 +315,9 @@ export async function createServer() {
                 break;
               case 'analyze_errors':
                 result = await analyzeErrors(args);
+                break;
+              case 'scan_security':
+                result = await scanSecurity(args);
                 break;
               default:
                 throw new Error(`Unknown tool: ${name}`);
