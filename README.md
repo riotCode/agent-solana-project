@@ -20,8 +20,9 @@ Building on Solana has friction:
 ✅ **Automated Test Setup** - Configure LiteSVM (sub-100ms tests), Mollusk, or test-validator  
 ✅ **One-Command Deployment** - Deploy to devnet with automatic build, airdrop, and verification
 ✅ **Smart Documentation** - Generate API docs from IDL (Markdown/HTML/TypeScript)  
+✅ **IDL Verification** - Verify instruction discriminators match your program
 ✅ **MCP Integration** - Works with any MCP-compatible agent (OpenClaw, Clawi, etc.)  
-✅ **Battle-Tested** - 11 tests passing, real generated Anchor projects verified
+✅ **Battle-Tested** - 19 tests passing, real generated Anchor projects verified
 
 ## Tools
 
@@ -124,7 +125,50 @@ Airdrop SOL to a keypair on devnet for testing.
 }
 ```
 
-### 6. generate_docs
+### 6. verify_discriminators
+Verify IDL discriminators match deployed program on-chain.
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "verify_discriminators",
+    "arguments": {
+      "idlPath": "target/idl/my_program.json",
+      "programId": "11111111111111111111111111111111",
+      "cluster": "devnet"
+    }
+  }
+}
+```
+
+**Catches:**
+- IDL discriminator mismatches (out-of-sync IDL vs deployed program)
+- Instruction name changes
+- Missing instructions
+
+**Returns:**
+- Discriminator for each instruction
+- Verification status
+- Recommendations for fixes
+
+### 7. get_instruction_signature
+Get discriminator and signature for a specific instruction.
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "get_instruction_signature",
+    "arguments": {
+      "idlPath": "target/idl/my_program.json",
+      "instructionName": "initialize"
+    }
+  }
+}
+```
+
+### 8. generate_docs
 Generate API documentation from a program's IDL.
 
 ```json
