@@ -300,6 +300,52 @@ These tools are the foundation. Future enhancements:
    Anchor CLI    Solana CLI   File I/O   RPC
 ```
 
+## Quick Start for Judges
+
+### Run the HTTP Server
+Test all tools via HTTP endpoints without MCP knowledge:
+
+```bash
+node http-server.js
+# 🚀 Server listening on port 3000
+```
+
+Then in another terminal:
+
+```bash
+# Health check
+curl http://localhost:3000/health
+
+# See all endpoints
+curl http://localhost:3000/
+
+# Call scaffold_program tool
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "method": "tools/call",
+    "params": {
+      "name": "scaffold_program",
+      "arguments": {"programName": "demo", "features": ["pda"]}
+    },
+    "id": 1
+  }'
+```
+
+### Run the Demo
+See all tools in action:
+
+```bash
+node demo.js
+```
+
+### Run Tests
+Verify all 101 tests pass:
+
+```bash
+npm test
+```
+
 ## Stack
 
 - **Language:** TypeScript + Node.js
