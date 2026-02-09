@@ -94,7 +94,7 @@ const httpServer = http.createServer(async (req, res) => {
       res.end(JSON.stringify({
         service: 'SolAgent Forge MCP Server',
         version: '0.1.0',
-        description: 'Autonomous Solana development assistant with 9 MCP tools',
+        description: 'Autonomous Solana development assistant with 11 MCP tools',
         endpoints: {
           GET: {
             '/health': 'Health check',

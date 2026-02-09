@@ -23,6 +23,7 @@ Building on Solana has friction:
 ✅ **IDL Verification** - Verify instruction discriminators using correct SHA-256 calculation
 ✅ **MCP Integration** - Works with any MCP-compatible agent (OpenClaw, Clawi, etc.)  
 ✅ **Battle-Tested** - 101 tests passing (8 MCP integration, 8 discriminator, 5 scaffold, 3 deploy, 8 verify-discriminator, 3 verify-onchain, 19 error-analysis, 50 security-scanner)
+✅ **11 MCP Tools** - Comprehensive development workflow from scaffold → test → deploy → analyze → secure
 
 ## Tools
 

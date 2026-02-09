@@ -18,6 +18,9 @@ my-vault/
 nft-only-test/
 nft-test/
 token-mint/
+arch-test-*/
+test-unknown/
+tmp-*/
 demo-vault/
 import-test/
 

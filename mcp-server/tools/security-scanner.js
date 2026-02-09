@@ -246,10 +246,13 @@ function hasSerializationRisk(code) {
 }
 
 function hasMissingChecks(code) {
-  // Check for functions without require! statements
-  const functionPattern = /pub fn\s+\w+\([^)]*\)[^{]*\{/;
-  const functions = code.match(functionPattern) || [];
-  return functions.some(fn => !/require!|assert/.test(fn));
+  // Check if code has any require! or assert statements at all
+  // If there are pub fn definitions but no validation checks anywhere, it's risky
+  const hasFunctions = /pub fn\s+\w+/.test(code);
+  const hasValidation = /require!|assert!|assert_eq!/.test(code);
+  
+  // Only flag if there are public functions but no validation checks in the entire code
+  return hasFunctions && !hasValidation;
 }
 
 function findPatternLocation(code, pattern) {

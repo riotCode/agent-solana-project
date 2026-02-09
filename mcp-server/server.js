@@ -346,6 +346,10 @@ export async function createServer() {
               id
             };
           
+          case 'notifications/initialized':
+            // MCP client initialization notification - no response needed
+            return null;
+          
           default:
             throw new Error(`Unknown method: ${method}`);
         }
