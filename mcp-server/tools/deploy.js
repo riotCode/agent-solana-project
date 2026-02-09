@@ -8,6 +8,32 @@ import { execSync } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
 
+// Whitelist valid clusters
+const VALID_CLUSTERS = ['devnet', 'testnet', 'mainnet-beta'];
+
+function validateCluster(cluster) {
+  if (!VALID_CLUSTERS.includes(cluster)) {
+    throw new Error(`Invalid cluster: ${cluster}. Must be one of: ${VALID_CLUSTERS.join(', ')}`);
+  }
+  return cluster;
+}
+
+function validateKeypairPath(keypairPath) {
+  if (!keypairPath) return null;
+  
+  // Reject path traversal attempts
+  if (keypairPath.includes('..') || keypairPath.includes('/') || keypairPath.includes('\\')) {
+    throw new Error(`Invalid keypair path: contains path traversal characters`);
+  }
+  
+  // Reject shell injection characters
+  if (/[;&|`$()[\]{}<>'"\\]/.test(keypairPath)) {
+    throw new Error(`Invalid keypair path: contains shell special characters`);
+  }
+  
+  return keypairPath;
+}
+
 export async function deployDevnet(args) {
   const { 
     programPath = '.',
@@ -16,6 +42,14 @@ export async function deployDevnet(args) {
     gasLimit = null,
     skipBuild = false
   } = args;
+  
+  // Validate cluster
+  validateCluster(cluster);
+  
+  // Validate keypair if provided
+  if (keypair) {
+    validateKeypairPath(keypair);
+  }
   
   const cwd = path.resolve(programPath);
   
@@ -113,16 +147,22 @@ export async function deployDevnet(args) {
     
     try {
       if (result.deployedProgramId) {
-        // Use solana CLI to verify
-        const verifyCmd = `solana program show ${result.deployedProgramId} -u ${cluster}`;
-        const verifyOutput = execSync(verifyCmd, {
-          encoding: 'utf8',
-          stdio: 'pipe'
-        });
-        
-        result.output.verify = verifyOutput;
-        result.steps.push('✅ Program verified on devnet');
-        result.verified = true;
+        // Validate deployed program ID before using in shell command
+        try {
+          new PublicKey(result.deployedProgramId);
+          // Use solana CLI to verify (cluster already validated at start)
+          const verifyCmd = `solana program show ${result.deployedProgramId} -u ${cluster}`;
+          const verifyOutput = execSync(verifyCmd, {
+            encoding: 'utf8',
+            stdio: 'pipe'
+          });
+          
+          result.output.verify = verifyOutput;
+          result.steps.push('✅ Program verified on devnet');
+          result.verified = true;
+        } catch (e) {
+          result.steps.push('⚠️  Program ID validation failed');
+        }
       }
     } catch (e) {
       result.steps.push('⚠️  Could not verify (solana CLI may not be available)');
@@ -147,6 +187,16 @@ export async function getDeploymentStatus(args) {
   
   if (!programId) {
     throw new Error('programId is required');
+  }
+  
+  // Validate cluster
+  validateCluster(cluster);
+  
+  // Validate programId as Solana public key
+  try {
+    new PublicKey(programId);
+  } catch (e) {
+    throw new Error(`Invalid program ID: ${programId}. Must be a valid Solana public key.`);
   }
   
   try {
@@ -189,6 +239,28 @@ export async function fundKeypair(args) {
   
   if (!publicKey) {
     throw new Error('publicKey is required');
+  }
+  
+  // Validate cluster early
+  try {
+    validateCluster(cluster);
+  } catch (e) {
+    return {
+      success: false,
+      publicKey,
+      error: e.message,
+      cluster
+    };
+  }
+  
+  // Validate amount
+  if (!Number.isInteger(amount) || amount <= 0) {
+    return {
+      success: false,
+      publicKey,
+      error: 'Amount must be a positive integer',
+      amount
+    };
   }
   
   // Validate public key format using Solana's PublicKey constructor
@@ -240,6 +312,14 @@ export async function fundKeypair(args) {
   
   // Fallback: Use solana CLI
   try {
+    // Validate cluster and amount to prevent injection
+    validateCluster(cluster);
+    
+    // Ensure amount is a valid number
+    if (!Number.isInteger(amount) || amount <= 0) {
+      throw new Error('Amount must be a positive integer');
+    }
+    
     const output = execSync(`solana airdrop ${amount} ${publicKey} -u ${cluster}`, {
       encoding: 'utf8',
       stdio: 'pipe'
