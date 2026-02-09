@@ -34,6 +34,23 @@ function validateKeypairPath(keypairPath) {
   return keypairPath;
 }
 
+function validateProgramPath(programPath) {
+  if (!programPath || programPath === '.') {
+    return programPath;
+  }
+  
+  // Reject shell injection characters that could be used in execSync
+  if (/[;&|`$()[\]{}<>'"\\]/.test(programPath)) {
+    throw new Error(`Invalid program path: contains shell special characters`);
+  }
+  
+  // Warn about suspicious path traversal but allow single-level relative paths
+  // (e.g., '../other-project' is intentionally allowed for legitimate use cases)
+  // The main protection is rejecting shell metacharacters above
+  
+  return programPath;
+}
+
 export async function deployDevnet(args) {
   const { 
     programPath = '.',
@@ -45,6 +62,9 @@ export async function deployDevnet(args) {
   
   // Validate cluster
   validateCluster(cluster);
+  
+  // Validate program path
+  validateProgramPath(programPath);
   
   // Validate keypair if provided
   if (keypair) {
