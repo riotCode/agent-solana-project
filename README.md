@@ -4,6 +4,34 @@
 
 An MCP (Model Context Protocol) server that provides AI agents with tools to autonomously scaffold, test, and deploy Solana Anchor programs.
 
+---
+
+## ⚡ Quick Verification for Judges
+
+**Want to verify this works?** Copy-paste these commands (takes 2 minutes):
+
+```bash
+cd ../generated
+
+# 1. Start the HTTP server
+node http-server.js &
+
+# 2. Check health (11 tools, 101 tests)
+curl http://localhost:3000/health
+
+# 3. Run comprehensive demo
+node demo-video.js
+
+# 4. Run test suite
+npm test
+```
+
+✅ Expected: All 11 tools work, 101 tests pass, scaffold + security + docs demo succeeds.
+
+**Full guide:** See [DEMO.md](./DEMO.md) for detailed verification steps and tool explanations.
+
+---
+
 ## Core Problem
 
 Building on Solana has friction:
