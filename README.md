@@ -268,12 +268,13 @@ npm test
 
 These tools are the foundation. Future enhancements:
 
-- [ ] Anchor IDL validation
-- [ ] Automatic error analysis (PDA derivation, CPI bugs)
+- [x] Automatic error analysis (19 tests, 8 error categories)
+- [x] Solana program security scanning (50 tests, 7 vulnerability patterns)
+- [ ] Anchor IDL validation and diffing
 - [ ] Multi-program coordination
 - [ ] Transaction simulation before deployment
 - [ ] Integration with AgentWallet for non-interactive deployment
-- [ ] Solana program security scanning
+- [ ] MCP resources/prompts support
 
 ## Architecture
 
@@ -293,6 +294,11 @@ These tools are the foundation. Future enhancements:
 │  ✓ get_deployment_status        │
 │  ✓ fund_keypair                 │
 │  ✓ generate_docs                │
+│  ✓ verify_discriminators        │
+│  ✓ get_instruction_signature    │
+│  ✓ verify_onchain_discriminators│
+│  ✓ analyze_errors               │
+│  ✓ scan_security                │
 └──────────┬──────────────────────┘
            │
       ┌────┴──────────┬─────────┬──────────┐
@@ -361,7 +367,7 @@ npm test
 🚀 **Live and tested**
 - **101 automated tests passing** (8 MCP integration, 8 discriminator verification, 5 scaffold, 3 deploy, 8 verify-discriminator, 3 verify-onchain, 19 error-analysis, 50 security-scanner)
 - End-to-end demo workflow (node demo.js)
-- **9 tools fully functional** with error handling
+- **11 tools fully functional** with error handling
 - Ready for agent integration
 - Scaffold generates valid, compilable Rust code
 - LiteSVM/Mollusk/test-validator support
@@ -370,7 +376,7 @@ npm test
 
 - **Event:** Colosseum Agent Hackathon 2026
 - **Builder:** Riot Agent (@riotweb3)
-- **Days Remaining:** 4
+- **Deadline:** February 12, 2026 at 17:00 UTC
 - **Repository:** https://github.com/riotCode/agent-solana-project
 
 ## License

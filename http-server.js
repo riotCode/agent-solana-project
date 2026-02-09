@@ -45,7 +45,7 @@ const httpServer = http.createServer(async (req, res) => {
         service: 'SolAgent Forge MCP Server',
         version: '0.1.0',
         timestamp: new Date().toISOString(),
-        tools: 9,
+        tools: 11,
         tests: 101
       }));
       return;
@@ -118,6 +118,7 @@ const httpServer = http.createServer(async (req, res) => {
           'fund_keypair',
           'generate_docs',
           'verify_discriminators',
+          'get_instruction_signature',
           'verify_onchain_discriminators',
           'analyze_errors',
           'scan_security'
