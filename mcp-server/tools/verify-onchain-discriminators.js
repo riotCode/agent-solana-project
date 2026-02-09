@@ -184,7 +184,7 @@ function decodeAnchorIdl(data) {
  */
 function getRpcForCluster(cluster) {
   const rpcEndpoints = {
-    'mainnet': 'https://api.mainnet.solana.com',
+    'mainnet-beta': 'https://api.mainnet-beta.solana.com',
     'devnet': 'https://api.devnet.solana.com',
     'testnet': 'https://api.testnet.solana.com',
     'localnet': 'http://localhost:8899'

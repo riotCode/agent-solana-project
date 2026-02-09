@@ -126,7 +126,7 @@ pub fn mint_token(ctx: Context<MintToken>, amount: u64) -> Result<()> {
     const idlPath = './demo-output/token-mint/target/idl/token_mint.json';
     const discriminatorResult = await verifyDiscriminators({
       idlPath,
-      programId: 'TokenkegQfeZyiNwAJsyFbPVwwQQfstapzSmAP5Mnt'
+      programId: 'TokenkegQfeZyiNwAJsyFbPYj6Hp7CPd4jKu9KLh2Mnt'
     });
 
     console.log(success('Discriminators verified'));
@@ -191,7 +191,7 @@ pub fn mint_token(ctx: Context<MintToken>, amount: u64) -> Result<()> {
     console.log(highlight(`1. Run: anchor build\n2. Extract program ID from Anchor.toml\n3. Deploy to devnet: anchor deploy\n4. Write program ID to blockchain\n\nEstimated time: 30-60 seconds`));
 
     // Simulate a known program
-    const mockProgramId = 'TokenkegQfeZyiNwAJsyFbPVwwQQfstapzSmAP5Mnt';
+    const mockProgramId = 'TokenkegQfeZyiNwAJsyFbPYj6Hp7CPd4jKu9KLh2Mnt';
     const statusResult = await getDeploymentStatus({
       programId: mockProgramId,
       cluster: 'devnet'
