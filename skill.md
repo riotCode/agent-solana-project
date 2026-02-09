@@ -49,6 +49,10 @@ Then connect any MCP client (OpenClaw, Clawi, custom client, etc).
 ### 1. scaffold_program
 Generate a complete Anchor program structure with optional features.
 
+**Parameters:**
+- `programName` (string, required): Name of the program (e.g., "token-vault")
+- `features` (array, optional): Features to include: ["pda", "cpi", "token"]
+
 **Example:**
 ```json
 {
@@ -57,7 +61,7 @@ Generate a complete Anchor program structure with optional features.
   "params": {
     "name": "scaffold_program",
     "arguments": {
-      "program_name": "escrow",
+      "programName": "escrow",
       "features": ["pda", "cpi"]
     }
   },
@@ -70,59 +74,90 @@ Generate a complete Anchor program structure with optional features.
 ### 2. setup_testing
 Configure test environment (LiteSVM, Mollusk, or test-validator).
 
+**Parameters:**
+- `framework` (string, required, enum: "litesvm", "mollusk", "test-validator"): Testing framework to use
+
 **Example:**
 ```json
 {
   "name": "setup_testing",
   "arguments": {
-    "framework": "litesvm",
-    "program_name": "escrow"
+    "framework": "litesvm"
   }
 }
 ```
 
 **Output:** Ready-to-use test suite with framework imports and test patterns.
 
-### 3. documentation
-Generate API documentation from IDL (Markdown, HTML, or TypeScript).
+### 3. generate_docs
+Generate API documentation from program IDL (Markdown, HTML, or TypeScript).
+
+**Parameters:**
+- `idlPath` (string, required): Path to IDL JSON file
+- `format` (string, optional, enum: "markdown", "html", "typescript"): Output format (default: "markdown")
 
 **Example:**
 ```json
 {
-  "name": "documentation",
+  "name": "generate_docs",
   "arguments": {
-    "idl_path": "target/idl/escrow.json",
+    "idlPath": "target/idl/escrow.json",
     "format": "markdown"
   }
 }
 ```
 
-**Output:** Professional Markdown docs with instruction descriptions, account requirements, and examples.
+**Output:** Professional API documentation with instruction descriptions, account requirements, and examples.
 
-### 4. deploy
-Deploy compiled programs to devnet with automatic build and airdrop.
+### 4. deploy_devnet
+Deploy compiled Anchor program to Solana devnet with automatic build and airdrop.
+
+**Parameters:**
+- `programPath` (string, required): Path to Anchor project root
+- `cluster` (string, optional, enum: "devnet", "testnet", "mainnet-beta"): Solana cluster
+- `keypair` (string, optional): Path to keypair file (uses default if not provided)
+- `skipBuild` (boolean, optional): Skip anchor build step
 
 **Example:**
 ```json
 {
-  "name": "deploy",
+  "name": "deploy_devnet",
   "arguments": {
-    "program_path": "programs/escrow",
-    "keypair_path": "/path/to/keypair.json",
+    "programPath": "programs/escrow",
     "cluster": "devnet"
   }
 }
 ```
 
-**Output:** Program deployed, verification link, account info.
+**Output:** Program deployed, verification link, on-chain account info.
 
-### 5. security_scanner
-Analyze Rust code for common vulnerabilities (8 categories, 50+ tests).
+### 5. get_deployment_status
+Check deployment status of a program on-chain.
+
+**Parameters:**
+- `programId` (string, required): Program ID (public key)
+- `cluster` (string, optional, enum: "devnet", "testnet", "mainnet-beta"): Solana cluster
+
+### 6. fund_keypair
+Airdrop SOL to a keypair on devnet for testing.
+
+**Parameters:**
+- `publicKey` (string, required): Public key to receive SOL
+- `cluster` (string, optional, enum: "devnet", "testnet"): Solana cluster
+- `amount` (number, optional): Amount of SOL to airdrop (default: 2)
+
+### 7. scan_security
+Analyze Rust/TypeScript code for common security vulnerabilities (8 categories, 50+ tests).
+
+**Parameters:**
+- `code` (string, required): Program source code to scan
+- `codeType` (string, optional, enum: "rust", "typescript"): Programming language (default: "rust")
+- `severity` (string, optional, enum: "low", "medium", "high", "critical"): Minimum severity to report (default: "medium")
 
 **Example:**
 ```json
 {
-  "name": "security_scanner",
+  "name": "scan_security",
   "arguments": {
     "code": "pub fn initialize(ctx: Context<Initialize>) { ... }"
   }
@@ -131,31 +166,47 @@ Analyze Rust code for common vulnerabilities (8 categories, 50+ tests).
 
 **Output:** Risk score (0-100), identified vulnerabilities, CWE references, recommendations.
 
-### 6. verify_discriminator
-Calculate correct SHA-256 discriminator for any instruction.
+### 8. verify_discriminators
+Verify instruction discriminators match deployed program on-chain.
+
+**Parameters:**
+- `idlPath` (string, required): Path to IDL JSON file
+- `programId` (string, required): Program ID (public key)
+- `cluster` (string, optional): Solana cluster
+- `rpcUrl` (string, optional): Custom RPC URL
 
 **Example:**
 ```json
 {
-  "name": "verify_discriminator",
+  "name": "verify_discriminators",
   "arguments": {
-    "namespace": "escrow",
-    "instruction_name": "initialize"
+    "idlPath": "target/idl/escrow.json",
+    "programId": "EscrowXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
   }
 }
 ```
 
-**Output:** Correct discriminator bytes, verification against IDL.
+### 9. get_instruction_signature
+Get SHA-256 discriminator for a specific instruction.
 
-### 7. verify_onchain_discriminators
+**Parameters:**
+- `idlPath` (string, required): Path to IDL JSON file
+- `instructionName` (string, required): Instruction name (e.g., "initialize")
+
+### 10. verify_onchain_discriminators
 Verify instruction discriminators on-chain via RPC.
+
+**Parameters:**
+- `programId` (string, required): Program ID (public key)
+- `cluster` (string, optional): Solana cluster
+- `rpcUrl` (string, optional): Custom RPC URL
 
 **Example:**
 ```json
 {
   "name": "verify_onchain_discriminators",
   "arguments": {
-    "program_id": "EscrowXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "programId": "EscrowXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
     "cluster": "devnet"
   }
 }
@@ -163,29 +214,25 @@ Verify instruction discriminators on-chain via RPC.
 
 **Output:** On-chain program verification, discriminator matches, health status.
 
-### 8. error_analysis
-Interpret Anchor/Solana error messages with fixes.
+### 11. analyze_errors
+Interpret Anchor/Rust compiler errors with fixes.
+
+**Parameters:**
+- `errorOutput` (string, required): Raw compiler error output or error message
+- `errorType` (string, optional, enum: "compilation", "runtime", "test"): Type of error
+- `projectPath` (string, optional): Path to project root
 
 **Example:**
 ```json
 {
-  "name": "error_analysis",
+  "name": "analyze_errors",
   "arguments": {
-    "error_message": "Custom error 0x1770: invalid account owner"
+    "errorOutput": "Custom error 0x1770: invalid account owner"
   }
 }
 ```
 
 **Output:** Error explanation, root cause, suggested fixes.
-
-### 9. list_tools
-List all available tools and parameters.
-
-### 10. ping
-Health check and service info.
-
-### 11. identify_risks
-Analyze full program for architecture-level risks (PDAs, CPIs, state management).
 
 ## API Endpoint Reference
 
@@ -224,12 +271,11 @@ Content-Type: application/json
 ## Integration Examples
 
 ### With AgentPay (Escrow Contracts)
-```
-POST /mcp
+```json
 {
   "name": "scaffold_program",
   "arguments": {
-    "program_name": "agentpay_escrow",
+    "programName": "agentpay_escrow",
     "features": ["pda"]
   }
 }
@@ -238,12 +284,11 @@ POST /mcp
 Output: Escrow PDA structure, ready for AgentPay ZK circuits.
 
 ### With CLAWIN (Betting Contracts)
-```
-POST /mcp
+```json
 {
   "name": "scaffold_program",
   "arguments": {
-    "program_name": "clawin_bet",
+    "programName": "clawin_bet",
     "features": ["cpi"]
   }
 }
@@ -252,10 +297,9 @@ POST /mcp
 Output: Betting contract scaffold with token integration.
 
 ### With MoltLaunch (Verified Deployments)
-```
-POST /mcp
+```json
 {
-  "name": "security_scanner",
+  "name": "scan_security",
   "arguments": {
     "code": "(full program code)"
   }
@@ -309,13 +353,13 @@ npm test  # 101/101 tests passing (3.2s)
 ## Performance
 
 - **Initialization:** ~2.5s (once per server start)
-- **Per-request:** <100ms (scaffold_program, security_scanner, etc)
+- **Per-request:** <100ms (scaffold_program, scan_security, etc)
 - **Test suite:** 3.2s (101 tests)
 - **Memory footprint:** ~80MB (Node.js + deps)
 
 ## Architecture
 
-**Core:** 8 tools (2,056 LOC Rust/TypeScript)
+**Core:** 11 tools (2,656 LOC Rust/TypeScript)
 **HTTP Server:** 165 LOC pure Node.js
 **Tests:** 1,247 LOC (101 tests)
 **Dependencies:** 1 runtime (@solana/web3.js)
