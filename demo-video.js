@@ -224,7 +224,9 @@ pub mod demo_vault {
       { name: 'deploy_devnet', status: 'Ready ✅' },
       { name: 'verify_discriminators', status: 'Available ✅' },
       { name: 'verify_onchain_discriminators', status: 'Available ✅' },
-      { name: 'fund_keypair', status: 'Available ✅' }
+      { name: 'fund_keypair', status: 'Available ✅' },
+      { name: 'decode_anchor_idl', status: 'Available ✅' },
+      { name: 'mcp_ping', status: 'Available ✅' }
     ];
 
     tools.forEach(tool => {

@@ -156,7 +156,7 @@ import { analyzeErrors } from './mcp-server/tools/error-analysis.js';
 
 const error = `error[E0425]: cannot find value 'ctx' in this scope`;
 
-const analysis = await analyzeErrors({ rustError: error });
+const analysis = await analyzeErrors({ errorOutput: error });
 // Returns: type, severity, message, and fix suggestions
 ```
 

@@ -191,7 +191,7 @@ const TOOLS = [
         },
         cluster: {
           type: 'string',
-          enum: ['devnet', 'testnet', 'mainnet'],
+          enum: ['devnet', 'testnet', 'mainnet-beta'],
           description: 'Solana cluster'
         },
         rpcUrl: {
