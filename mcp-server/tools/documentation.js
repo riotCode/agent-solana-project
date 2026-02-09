@@ -37,7 +37,8 @@ export async function generateDocs(args) {
   await fs.mkdir(outputDir, { recursive: true });
   
   const extension = { markdown: 'md', html: 'html', typescript: 'ts' }[format];
-  const outputPath = path.join(outputDir, `${idl.name}.${extension}`);
+  const sanitizedName = path.basename(idl.name);
+  const outputPath = path.join(outputDir, `${sanitizedName}.${extension}`);
   
   await fs.writeFile(outputPath, documentation);
   
@@ -45,7 +46,7 @@ export async function generateDocs(args) {
     success: true,
     idlName: idl.name,
     format,
-    outputPath: `docs/${idl.name}.${extension}`,
+    outputPath: `docs/${sanitizedName}.${extension}`,
     instructionCount: idl.instructions?.length || 0,
     accountCount: idl.accounts?.length || 0,
     typeCount: idl.types?.length || 0

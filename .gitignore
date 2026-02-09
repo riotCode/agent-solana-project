@@ -23,6 +23,7 @@ test-unknown/
 tmp-*/
 demo-vault/
 import-test/
+valid-name/
 
 # Generated test files from documentation tool
 tests/*.ts
