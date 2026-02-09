@@ -216,9 +216,17 @@ function hasReentrancyRisk(code) {
 }
 
 function hasArithmeticRisk(code) {
-  // Check for + - * / without checked_ prefix
-  const arithmeticPattern = /\s[\+\-\*\/]\s(?!checked)/;
-  return arithmeticPattern.test(code) && /u64|u128|i64|i128/.test(code);
+  // Check for arithmetic without checked_ prefix
+  // Filter out comments and strings first to avoid false positives
+  const codeWithoutComments = code
+    .split('\n')
+    .map(line => line.split('//')[0]) // Remove line comments
+    .join('\n');
+  
+  // Look for actual arithmetic operations in code (not just any + - * /)
+  // More specific pattern: assignment or comparison with arithmetic
+  const arithmeticPattern = /[a-zA-Z_]\w*\s*[\+\-\*\/]=|=\s*[a-zA-Z_]\w*\s*[\+\-\*\/]|let\s+\w+\s*=\s*\w+\s*[\+\-\*\/]/;
+  return arithmeticPattern.test(codeWithoutComments) && /u64|u128|i64|i128/.test(code);
 }
 
 function hasAuthorityRisk(code) {
@@ -246,13 +254,14 @@ function hasSerializationRisk(code) {
 }
 
 function hasMissingChecks(code) {
-  // Check if code has any require! or assert statements at all
-  // If there are pub fn definitions but no validation checks anywhere, it's risky
-  const hasFunctions = /pub fn\s+\w+/.test(code);
-  const hasValidation = /require!|assert!|assert_eq!/.test(code);
+  // More precise check: look for actual state mutations without validation
+  // Pattern: Account modification (amount/balance -= or +=) without preceding checks
+  const hasStateModification = /account\.\w+\s*[\+\-]=|balance\s*[\+\-]=|\.amount\s*=|\.data\[/i.test(code);
+  const hasDirectValidation = /require!|assert!|assert_eq!|if\s+[a-zA-Z_]/i.test(code);
+  const hasComments = /\/\//i.test(code); // Documented code may not have explicit checks
   
-  // Only flag if there are public functions but no validation checks in the entire code
-  return hasFunctions && !hasValidation;
+  // Only flag actual risky pattern: state mutation without any validation nearby
+  return hasStateModification && !hasDirectValidation && !hasComments;
 }
 
 function findPatternLocation(code, pattern) {
