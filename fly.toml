@@ -1,0 +1,43 @@
+# fly.toml app configuration generated via `fly launch`
+# Reference: https://fly.io/docs/reference/configuration/
+
+app = "solagent-forge"
+primary_region = "sjc"
+
+[build]
+builder = "paketobuildpacks"
+buildpacks = ["gcr.io/buildpacks/nodejs"]
+
+[env]
+NODE_ENV = "production"
+PORT = "3000"
+
+[http_service]
+internal_port = 3000
+force_https = true
+auto_stop_machines = true
+auto_start_machines = true
+min_machines_running = 1
+processes = ["app"]
+
+[[services]]
+protocol = "tcp"
+internal_port = 3000
+
+[[services.ports]]
+port = 443
+handlers = ["http"]
+
+[[services.ports]]
+port = 80
+handlers = ["http"]
+
+[checks]
+  [checks.http]
+    grace_period = "5s"
+    interval = "30s"
+    method = "get"
+    path = "/health"
+    protocol = "http"
+    restart_limit = 3
+    timeout = "10s"

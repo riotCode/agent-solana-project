@@ -1,0 +1,24 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "dockerfile",
+    "dockerfile": "Dockerfile"
+  },
+  "deploy": {
+    "numReplicas": 1,
+    "startCommand": "node http-server.js",
+    "restartPolicyMaxRetries": 3,
+    "healthcheckPath": "/health",
+    "healthcheckInterval": 30,
+    "healthcheckTimeout": 10
+  },
+  "env": {
+    "NODE_ENV": "production",
+    "PORT": "3000"
+  },
+  "plugins": [
+    {
+      "source": "https://github.com/railwayapp/nixpacks/releases/download/v1.0.0/nodejs.nix"
+    }
+  ]
+}
