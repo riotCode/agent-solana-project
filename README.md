@@ -30,7 +30,9 @@ npm test
 
 **Full guide:** See [DEMO.md](./DEMO.md) for detailed verification steps and tool explanations.
 
-**Production deployment:** See [DEPLOYMENT.md](./DEPLOYMENT.md) for Railway/Fly.io setup.
+**🚀 DEPLOY LIVE (3 minutes):** See [DEPLOY_LIVE.md](./DEPLOY_LIVE.md) for Railway/Fly.io quick start.
+
+**Production deployment:** See [DEPLOYMENT.md](./DEPLOYMENT.md) for comprehensive setup guide.
 
 ---
 
