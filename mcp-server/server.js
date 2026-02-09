@@ -339,6 +339,13 @@ export async function createServer() {
               id
             };
           
+          case 'ping':
+            return {
+              jsonrpc: '2.0',
+              result: {},
+              id
+            };
+          
           default:
             throw new Error(`Unknown method: ${method}`);
         }

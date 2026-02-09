@@ -24,9 +24,10 @@ describe("{{PROGRAM_NAME}} with LiteSVM", () => {
     svm.airdrop(payer.publicKey, 10 * LAMPORTS_PER_SOL);
     
     // Create Anchor provider using LiteSVM
-    // LiteSVM provides a compatible RPC interface
+    // Note: LiteSVM does not provide a full RPC interface; this is fast in-memory testing only
+    // For full RPC compatibility, use solana-test-validator instead
     provider = new anchor.AnchorProvider(
-      svm as any,  // LiteSVM is compatible with Solana Connection interface
+      svm as any,  // Fast in-memory VM (not full RPC compatible)
       new anchor.Wallet(payer),
       { commitment: "processed" }
     );

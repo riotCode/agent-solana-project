@@ -148,22 +148,31 @@ function getIdlAddress(programId) {
 
 /**
  * Decode Anchor IDL from on-chain data
- * IDL is stored as msgpack
+ * IDL is stored as msgpack (binary format)
+ * 
+ * **STUB IMPLEMENTATION:**
+ * This is a placeholder that returns empty data. A real implementation would:
+ * 1. npm install msgpack (or @msgpack/msgpack)
+ * 2. Use msgpack.decode() on the binary data after skipping the 8-byte discriminator
+ * 3. Return the parsed IDL object with instructions, accounts, events arrays
+ * 
+ * For most use cases, you can fetch IDL from Anchor's IDL registry instead:
+ * https://github.com/coral-xyz/anchor/blob/master/client/js/src/idl.ts
  */
 function decodeAnchorIdl(data) {
-  // In production, you'd use a msgpack decoder here
-  // For now, return a stub indicating IDL would be decoded
   try {
     // Skip the 8-byte discriminator at the start
-    const idlData = data.slice(8);
+    // const idlData = data.slice(8);
+    // Real implementation: const idl = msgpack.decode(idlData);
     
-    // This is a placeholder - real implementation would use msgpack-decode
+    // Stub: return empty structure to indicate IDL format is available but decoding not implemented
     return {
       version: '0.1.0',
       name: 'unknown',
       instructions: [],
       accounts: [],
-      events: []
+      events: [],
+      _note: 'This is a stub. To decode real IDL, implement msgpack.decode()'
     };
   } catch (e) {
     throw new Error(`Failed to decode IDL: ${e.message}`);
