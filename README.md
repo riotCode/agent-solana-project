@@ -30,6 +30,8 @@ npm test
 
 **Full guide:** See [DEMO.md](./DEMO.md) for detailed verification steps and tool explanations.
 
+**Production deployment:** See [DEPLOYMENT.md](./DEPLOYMENT.md) for Railway/Fly.io setup.
+
 ---
 
 ## Core Problem
