@@ -97,6 +97,8 @@ pub struct InitializeToken<'info> {
         payer = payer,
         mint::decimals = 6,
         mint::authority = payer.key(),
+        seeds = [b"mint"],
+        bump
     )]
     pub mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
