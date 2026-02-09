@@ -18,8 +18,14 @@ const PORT = process.env.PORT || 3000;
 let mcpServer = null;
 
 // Initialize MCP server once
-(async () => {
-  mcpServer = await createServer();
+const serverInit = (async () => {
+  try {
+    mcpServer = await createServer();
+    console.log('✅ MCP server initialized');
+  } catch (error) {
+    console.error('❌ Failed to initialize MCP server:', error);
+    process.exit(1);
+  }
 })();
 
 const httpServer = http.createServer(async (req, res) => {
@@ -61,13 +67,16 @@ const httpServer = http.createServer(async (req, res) => {
 
       req.on('end', async () => {
         try {
+          // Wait for server initialization before handling request
+          await serverInit;
+          
           const message = JSON.parse(body);
           
           if (!mcpServer) {
             res.writeHead(503);
             res.end(JSON.stringify({
-              error: 'Server initializing',
-              details: 'MCP server not ready yet'
+              error: 'Server initialization failed',
+              details: 'MCP server failed to initialize'
             }));
             return;
           }
