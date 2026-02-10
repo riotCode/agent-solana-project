@@ -3,12 +3,15 @@
 /**
  * SolAgent Forge MCP Server
  * 
- * Provides agent-accessible tools for Solana development:
- * - scaffold_program: Generate Anchor program structure
- * - setup_testing: Configure test environment
- * - deploy_devnet: Deploy to devnet
- * - generate_docs: Create documentation from IDL
- * - analyze_errors: Interpret Solana errors
+ * Provides 8 agent-accessible tools for Solana development:
+ * - anchor_scaffold: Generate Anchor program structure
+ * - solana_fund_wallet: Airdrop SOL on devnet
+ * - solana_get_balance: Query SOL balance
+ * - solana_get_account_info: Fetch account data
+ * - solana_get_program_info: Check program deployment status
+ * - solana_get_transaction: Parse transaction details
+ * - solana_compute_discriminator: Compute Anchor discriminators
+ * - solana_derive_pda: Derive program-derived addresses
  */
 
 import { createServer } from './server.js';
