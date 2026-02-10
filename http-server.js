@@ -202,7 +202,7 @@ const httpServer = http.createServer(async (req, res) => {
           health: 'curl http://localhost:3000/health',
           initialize: 'curl -X POST http://localhost:3000/mcp -H "Content-Type: application/json" -d \'{"method": "initialize", "jsonrpc": "2.0", "id": 1}\'',
           listTools: 'curl -X POST http://localhost:3000/mcp -H "Content-Type: application/json" -d \'{"method": "tools/list", "jsonrpc": "2.0", "id": 2}\'',
-          scaffold: 'curl -X POST http://localhost:3000/tools/scaffold_program -H "Content-Type: application/json" -d \'{"programName": "my_program", "features": ["pda"]}\''
+          scaffold: 'curl -X POST http://localhost:3000/tools/anchor_scaffold -H "Content-Type: application/json" -d \'{"programName": "my_program", "features": ["pda"]}\''
         },
         tools: toolNames,
         github: 'https://github.com/riotCode/agent-solana-project',

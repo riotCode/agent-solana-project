@@ -69,7 +69,7 @@ curl http://localhost:3000/health
 |------|---------|-------|
 | `anchor_scaffold` | Generate Anchor program boilerplate (PDA/CPI/token features) | ✅ 5 |
 
-**Total: 8 tools, 58 tests passing**
+**Total: 8 tools, 66 tests passing**
 
 ---
 
@@ -202,7 +202,7 @@ curl http://localhost:3000/health
 npm test
 
 # Output:
-# ✅ 58 tests passing
+# ✅ 66 tests passing
 # ⚡ ~4.4s total runtime
 # 📦 0 dependencies in test suite
 ```

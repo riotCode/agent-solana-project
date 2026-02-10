@@ -14,7 +14,7 @@ A Model Context Protocol (MCP) server providing AI agents with direct Solana blo
 ## Features
 
 - **8 Focused Tools** — RPC queries, PDA derivation, discriminator computation, scaffolding
-- **Production-Ready** — 58/58 tests passing, single dependency (@solana/web3.js)
+- **Production-Ready** — 66/66 tests passing, single dependency (@solana/web3.js)
 - **Pure RPC** — No Solana CLI or Anchor CLI dependencies
 - **Direct Blockchain Access** — Query accounts, balances, transactions, program deployment
 - **Deterministic Crypto** — PDA derivation and discriminator computation
@@ -289,7 +289,7 @@ Derive a Program Derived Address (PDA) from seeds and program ID.
 - **Port:** 3000 (default), configurable via `PORT` env var
 
 ### Testing
-- **58 tests** passing in ~4.4s
+- **66 tests** passing in ~4.4s
 - **Mocked RPC** for deterministic tests (no network calls)
 - **Input validation** (invalid keys, missing params, invalid clusters)
 
