@@ -26,14 +26,14 @@ curl http://localhost:3000/health
 #   "service": "SolAgent Forge MCP Server",
 #   "version": "0.1.0",
 #   "tools": 8,
-#   "tests": 58
+#   "tests": 66
 # }
 ```
 
 ✅ **Success criteria:**
 - Server responds with `status: ok`
 - Shows **8 tools** available
-- Shows **58 tests** passing
+- Shows **66 tests** passing
 
 ### (Optional) List tools via REST
 
@@ -94,7 +94,7 @@ node demo-video.js
 
 ## 3️⃣ Test Suite Verification (30 seconds)
 
-**What it proves:** 58 automated tests covering all tools pass.
+**What it proves:** 66 automated tests covering all tools pass.
 
 ```bash
 cd ../generated
@@ -103,14 +103,14 @@ cd ../generated
 npm test
 
 # Expected output:
-# # tests 58
-# # pass 58
+# # tests 66
+# # pass 66
 # # fail 0
 # # duration_ms ~4400
 ```
 
 ✅ **Success criteria:**
-- 58 tests passing
+- 66 tests passing
 - 0 failures
 - All 8 tools verified
 
@@ -212,9 +212,9 @@ const result = await getAccountInfo({
 
 ## 📊 Verification Checklist
 
-- [ ] HTTP server responds to /health with 8 tools + 58 tests
+- [ ] HTTP server responds to /health with 8 tools + 66 tests
 - [ ] demo-video.js runs without errors
-- [ ] All 58 tests pass in ~4.4s
+- [ ] All 66 tests pass in ~4.4s
 - [ ] No uncommitted changes in git
 - [ ] README documents all 8 tools
 - [ ] Deterministic tools (PDA, discriminator, scaffold) work offline
@@ -227,7 +227,7 @@ const result = await getAccountInfo({
 **SolAgent Forge** is a **production-ready MCP server** that gives agents direct Solana primitives:
 
 1. **8 focused MCP tools** for RPC interaction, PDA derivation, discriminator computation, and scaffolding
-2. **58 comprehensive tests** verifying all tools work end-to-end
+2. **66 comprehensive tests** verifying all tools work end-to-end
 3. **Single runtime dependency** (@solana/web3.js) for minimal attack surface
 4. **Pure RPC** — No Solana CLI or Anchor CLI dependencies
 5. **npx-runnable** — `npx @riotagent/solagent-forge` works locally with any MCP client
@@ -253,7 +253,7 @@ A: RPC tools gracefully handle network issues. Deterministic tools (PDA, discrim
 ## 📝 Summary
 
 This demo proves **SolAgent Forge** is:
-- ✅ **Functional** — 58 tests passing, all 8 tools working
+- ✅ **Functional** — 66 tests passing, all 8 tools working
 - ✅ **Production-ready** — clean code, well-tested, zero CLI dependencies
 - ✅ **Autonomous-friendly** — MCP protocol standard, npx-installable
 - ✅ **Focused utility** — Solves core Solana agent pain points (RPC, PDA, discriminators, scaffolding)

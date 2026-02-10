@@ -33,7 +33,7 @@ git clone https://github.com/riotCode/agent-solana-project.git
 cd agent-solana-project
 npm install
 
-# Run tests (58 passing in ~4.4s)
+# Run tests (66 passing in ~4.4s)
 npm test
 
 # Start HTTP server (optional, for REST API access)
@@ -232,7 +232,7 @@ agent-solana-project/
 │       ├── parse-transaction.js  # solana_get_transaction
 │       ├── compute-discriminator.js
 │       └── derive-pda.js
-├── tests/                    # 58 passing tests
+├── tests/                    # 66 passing tests
 ├── http-server.js            # Optional HTTP wrapper
 └── package.json              # bin field for npx
 ```
