@@ -28,13 +28,15 @@ test('MCP Server integration', async (t) => {
 
     assert.strictEqual(result.jsonrpc, '2.0');
     assert.ok(Array.isArray(result.result.tools));
-    assert(result.result.tools.length >= 8, 'Should have at least 8 tools');
+    assert.strictEqual(result.result.tools.length, 6, 'Should have exactly 6 tools');
     
     const toolNames = result.result.tools.map(t => t.name);
     assert(toolNames.includes('scaffold_program'));
-    assert(toolNames.includes('setup_testing'));
     assert(toolNames.includes('deploy_devnet'));
-    assert(toolNames.includes('verify_discriminators'));
+    assert(toolNames.includes('get_deployment_status'));
+    assert(toolNames.includes('fund_keypair'));
+    assert(toolNames.includes('verify_onchain_discriminators'));
+    assert(toolNames.includes('scan_security'));
   });
 
   await t.test('tools/call scaffold_program returns result', async () => {
@@ -105,14 +107,14 @@ test('MCP Server integration', async (t) => {
     assert(content.featureSummary || content.features, 'Should include features in response');
   });
 
-  await t.test('verify_discriminators tool is available', async () => {
+  await t.test('verify_onchain_discriminators tool is available', async () => {
     const toolsList = await server.handleMessage({
       method: 'tools/list',
       id: 7
     });
 
-    const verifyTool = toolsList.result.tools.find(t => t.name === 'verify_discriminators');
-    assert.ok(verifyTool, 'verify_discriminators tool should exist');
+    const verifyTool = toolsList.result.tools.find(t => t.name === 'verify_onchain_discriminators');
+    assert.ok(verifyTool, 'verify_onchain_discriminators tool should exist');
     assert.ok(verifyTool.inputSchema, 'Tool should have inputSchema');
   });
 });

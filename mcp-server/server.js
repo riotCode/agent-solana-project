@@ -4,12 +4,8 @@
  */
 
 import { scaffoldProgram } from './tools/scaffold.js';
-import { setupTesting } from './tools/testing.js';
-import { generateDocs } from './tools/documentation.js';
 import { deployDevnet, getDeploymentStatus, fundKeypair } from './tools/deploy.js';
-import { verifyDiscriminators, getInstructionSignature } from './tools/verify-discriminator.js';
 import { verifyOnchainDiscriminators } from './tools/verify-onchain-discriminators.js';
-import { analyzeErrors } from './tools/error-analysis.js';
 import { scanSecurity } from './tools/security-scanner.js';
 
 const TOOLS = [
@@ -30,40 +26,6 @@ const TOOLS = [
         }
       },
       required: ['programName']
-    }
-  },
-  {
-    name: 'setup_testing',
-    description: 'Configure test environment with LiteSVM or Mollusk',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        framework: {
-          type: 'string',
-          enum: ['litesvm', 'mollusk', 'test-validator'],
-          description: 'Testing framework to use'
-        }
-      },
-      required: ['framework']
-    }
-  },
-  {
-    name: 'generate_docs',
-    description: 'Generate documentation from program IDL',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        idlPath: {
-          type: 'string',
-          description: 'Path to IDL JSON file'
-        },
-        format: {
-          type: 'string',
-          enum: ['markdown', 'html', 'typescript'],
-          description: 'Output format'
-        }
-      },
-      required: ['idlPath']
     }
   },
   {
@@ -135,51 +97,6 @@ const TOOLS = [
     }
   },
   {
-    name: 'verify_discriminators',
-    description: 'Verify IDL discriminators match deployed program on-chain',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        idlPath: {
-          type: 'string',
-          description: 'Path to IDL JSON file (e.g., target/idl/my_program.json)'
-        },
-        programId: {
-          type: 'string',
-          description: 'Program ID on Solana (public key)'
-        },
-        cluster: {
-          type: 'string',
-          enum: ['devnet', 'testnet', 'mainnet-beta'],
-          description: 'Solana cluster'
-        },
-        rpcUrl: {
-          type: 'string',
-          description: 'Custom RPC URL (optional)'
-        }
-      },
-      required: ['idlPath', 'programId']
-    }
-  },
-  {
-    name: 'get_instruction_signature',
-    description: 'Get discriminator and signature for a specific instruction',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        idlPath: {
-          type: 'string',
-          description: 'Path to IDL JSON file'
-        },
-        instructionName: {
-          type: 'string',
-          description: 'Instruction name (e.g., "initialize")'
-        }
-      },
-      required: ['idlPath', 'instructionName']
-    }
-  },
-  {
     name: 'verify_onchain_discriminators',
     description: 'Verify program exists on-chain and fetch its IDL',
     inputSchema: {
@@ -200,29 +117,6 @@ const TOOLS = [
         }
       },
       required: ['programId']
-    }
-  },
-  {
-    name: 'analyze_errors',
-    description: 'Analyze Anchor/Rust compiler errors and provide actionable fixes',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        errorOutput: {
-          type: 'string',
-          description: 'Raw compiler error output or error message'
-        },
-        errorType: {
-          type: 'string',
-          enum: ['compilation', 'runtime', 'test'],
-          description: 'Type of error (default: compilation)'
-        },
-        projectPath: {
-          type: 'string',
-          description: 'Path to project root (optional)'
-        }
-      },
-      required: ['errorOutput']
     }
   },
   {
@@ -292,12 +186,6 @@ export async function createServer() {
               case 'scaffold_program':
                 result = await scaffoldProgram(args);
                 break;
-              case 'setup_testing':
-                result = await setupTesting(args);
-                break;
-              case 'generate_docs':
-                result = await generateDocs(args);
-                break;
               case 'deploy_devnet':
                 result = await deployDevnet(args);
                 break;
@@ -307,17 +195,8 @@ export async function createServer() {
               case 'fund_keypair':
                 result = await fundKeypair(args);
                 break;
-              case 'verify_discriminators':
-                result = await verifyDiscriminators(args);
-                break;
-              case 'get_instruction_signature':
-                result = await getInstructionSignature(args);
-                break;
               case 'verify_onchain_discriminators':
                 result = await verifyOnchainDiscriminators(args);
-                break;
-              case 'analyze_errors':
-                result = await analyzeErrors(args);
                 break;
               case 'scan_security':
                 result = await scanSecurity(args);
