@@ -1,8 +1,11 @@
 {
   "name": "@riotagent/solagent-forge",
   "version": "0.1.0",
-  "description": "Autonomous Solana development companion - intelligent scaffolding, testing, and documentation",
+  "description": "Local MCP server for Solana RPC interaction, PDA derivation, and Anchor scaffolding",
   "main": "mcp-server/index.js",
+  "bin": {
+    "solagent-forge": "mcp-server/index.js"
+  },
   "type": "module",
   "scripts": {
     "mcp": "node mcp-server/index.js",
