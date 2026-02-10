@@ -110,7 +110,7 @@ Health check + service info.
   "service": "SolAgent Forge MCP Server",
   "version": "0.1.0",
   "timestamp": "2026-02-09T12:16:12.888Z",
-  "tools": 9,
+  "tools": 11,
   "tests": 101
 }
 ```
@@ -162,7 +162,7 @@ curl -X POST https://your-deployment-url/mcp \
     "params": {
       "name": "scaffold_program",
       "arguments": {
-        "program_name": "my_program",
+        "programName": "my_program",
         "features": ["pda", "token"]
       }
     },
@@ -178,7 +178,7 @@ curl -X POST https://your-deployment-url/mcp \
     "jsonrpc": "2.0",
     "method": "tools/call",
     "params": {
-      "name": "security_scanner",
+      "name": "scan_security",
       "arguments": {
         "code": "pub fn initialize(ctx: Context<Initialize>) { ... }"
       }
