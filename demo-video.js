@@ -56,10 +56,10 @@ async function runDemo() {
     // ═══════════════════════════════════════════════════════════════════════
 
     section('1️⃣  PDA Derivation (Deterministic, Offline)');
-    note('Computing PDA for Token Metadata program');
+    note('Computing PDA for a state account');
     const pdaResult = await derivePda({
       programId: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
-      seeds: ['metadata', 'EPjFWaJstUeSfuBMKrZjMGcPxc2b9B1d53A8tzDNMFp']
+      seeds: ['state', 'demo']
     });
     if (pdaResult.success) {
       log(`✅ PDA derived successfully`, 'green');
@@ -95,8 +95,8 @@ async function runDemo() {
     });
     if (scaffoldResult.success) {
       log(`✅ Program scaffolded successfully`, 'green');
-      log(`   Path: ${scaffoldResult.programPath}`, 'blue');
-      log(`   Files created: ${scaffoldResult.filesCreated}`, 'blue');
+      log(`   Path: ${scaffoldResult.projectPath}`, 'blue');
+      log(`   Files created: ${scaffoldResult.files?.length || 0}`, 'blue');
     } else {
       log(`❌ ${scaffoldResult.error}`, 'yellow');
     }
@@ -113,8 +113,8 @@ async function runDemo() {
     });
     if (balanceResult.success) {
       log(`✅ Balance retrieved`, 'green');
-      log(`   Lamports: ${balanceResult.lamports}`, 'blue');
-      log(`   SOL: ${balanceResult.sol}`, 'blue');
+      log(`   Lamports: ${balanceResult.balance?.lamports}`, 'blue');
+      log(`   SOL: ${balanceResult.balance?.sol}`, 'blue');
     } else {
       log(`⚠️  ${balanceResult.error || balanceResult.details}`, 'yellow');
     }
@@ -128,11 +128,11 @@ async function runDemo() {
       cluster: 'devnet',
       encoding: 'base64'
     });
-    if (accountResult.success) {
+    if (accountResult.success && accountResult.exists) {
       log(`✅ Account info retrieved`, 'green');
-      log(`   Owner: ${accountResult.owner}`, 'blue');
-      log(`   Executable: ${accountResult.executable}`, 'blue');
-      log(`   Lamports: ${accountResult.lamports}`, 'blue');
+      log(`   Owner: ${accountResult.accountInfo?.owner}`, 'blue');
+      log(`   Executable: ${accountResult.accountInfo?.executable}`, 'blue');
+      log(`   Lamports: ${accountResult.accountInfo?.lamports}`, 'blue');
     } else {
       log(`⚠️  ${accountResult.error || accountResult.details}`, 'yellow');
     }
@@ -164,13 +164,13 @@ async function runDemo() {
       signature: '5j7s6NiJS3JAkvgkoc18WVAsiSaci2pxB2A6ueCJP4tprA2TFg9wSyTLeYouxPBJEMzJinENTkpA52YStRW5Dia7',
       cluster: 'devnet'
     });
-    if (txResult.success) {
+    if (txResult.success && txResult.exists) {
       log(`✅ Transaction parsed`, 'green');
-      log(`   Slot: ${txResult.slot}`, 'blue');
-      log(`   Signers: ${txResult.accountKeys?.signers?.length || 0}`, 'blue');
-      log(`   Instructions: ${txResult.instructions?.length || 0}`, 'blue');
+      log(`   Slot: ${txResult.transaction?.slot}`, 'blue');
+      log(`   Accounts: ${txResult.transaction?.accounts?.length || 0}`, 'blue');
+      log(`   Instructions: ${txResult.transaction?.instructions?.length || 0}`, 'blue');
     } else {
-      log(`⚠️  ${txResult.error || txResult.details}`, 'yellow');
+      log(`⚠️  ${txResult.error || txResult.message || 'Transaction not found on cluster'}`, 'yellow');
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -199,7 +199,7 @@ async function runDemo() {
     log('✅ All 8 tools are functional and production-ready', 'green');
     log('\nDesign Philosophy:', 'bright');
     log('  Only tools agents genuinely cannot replicate natively:', 'blue');
-    log('  • Live blockchain RPC (agents can't do this)', 'blue');
+    log('  • Live blockchain RPC (agents cannot do this natively)', 'blue');
     log('  • Deterministic PDA derivation (agents hallucinate these)', 'blue');
     log('  • Discriminator computation (agents hallucinate these)', 'blue');
     log('  • Anchor scaffolding (useful boilerplate)', 'blue');
