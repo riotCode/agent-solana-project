@@ -1,127 +1,150 @@
-import test from 'node:test';
+/**
+ * MCP Server Tests
+ * Tests the MCP JSON-RPC protocol implementation
+ */
+
+import { test } from 'node:test';
 import assert from 'node:assert';
 import { createServer } from '../mcp-server/server.js';
 
-test('MCP Server integration', async (t) => {
+test('MCP Server', async (t) => {
   let server;
-  
-  await t.before(async () => {
+
+  t.before(async () => {
     server = await createServer();
   });
 
-  await t.test('initialize returns correct protocol version', async () => {
-    const result = await server.handleMessage({
+  await t.test('initialize method', async () => {
+    const response = await server.handleMessage({
+      jsonrpc: '2.0',
       method: 'initialize',
+      params: {},
       id: 1
     });
 
-    assert.strictEqual(result.jsonrpc, '2.0');
-    assert.ok(result.result.protocolVersion);
-    assert.strictEqual(result.result.serverInfo.name, 'solagent-forge');
+    assert.strictEqual(response.jsonrpc, '2.0');
+    assert.strictEqual(response.id, 1);
+    assert.ok(response.result);
+    assert.strictEqual(response.result.protocolVersion, '2024-11-05');
+    assert.ok(response.result.capabilities);
+    assert.strictEqual(response.result.serverInfo.name, 'solagent-forge');
   });
 
-  await t.test('tools/list returns all tools', async () => {
-    const result = await server.handleMessage({
+  await t.test('tools/list returns 8 tools', async () => {
+    const response = await server.handleMessage({
+      jsonrpc: '2.0',
       method: 'tools/list',
+      params: {},
       id: 2
     });
 
-    assert.strictEqual(result.jsonrpc, '2.0');
-    assert.ok(Array.isArray(result.result.tools));
-    assert.strictEqual(result.result.tools.length, 11, 'Should have exactly 11 tools');
-    
-    const toolNames = result.result.tools.map(t => t.name);
-    // Original 6 tools
-    assert(toolNames.includes('scaffold_program'));
-    assert(toolNames.includes('deploy_devnet'));
-    assert(toolNames.includes('get_deployment_status'));
-    assert(toolNames.includes('fund_keypair'));
-    assert(toolNames.includes('verify_onchain_discriminators'));
-    assert(toolNames.includes('scan_security'));
-    // New 5 RPC tools
-    assert(toolNames.includes('derive_pda'));
-    assert(toolNames.includes('get_account_info'));
-    assert(toolNames.includes('get_balance'));
-    assert(toolNames.includes('get_program_accounts'));
-    assert(toolNames.includes('parse_transaction'));
+    assert.strictEqual(response.jsonrpc, '2.0');
+    assert.strictEqual(response.id, 2);
+    assert.ok(response.result);
+    assert.ok(Array.isArray(response.result.tools));
+    assert.strictEqual(response.result.tools.length, 8);
+
+    // Verify expected tool names
+    const toolNames = response.result.tools.map(t => t.name);
+    assert.ok(toolNames.includes('anchor_scaffold'));
+    assert.ok(toolNames.includes('solana_fund_wallet'));
+    assert.ok(toolNames.includes('solana_get_balance'));
+    assert.ok(toolNames.includes('solana_get_account_info'));
+    assert.ok(toolNames.includes('solana_get_program_info'));
+    assert.ok(toolNames.includes('solana_get_transaction'));
+    assert.ok(toolNames.includes('solana_compute_discriminator'));
+    assert.ok(toolNames.includes('solana_derive_pda'));
   });
 
-  await t.test('tools/call scaffold_program returns result', async () => {
-    const result = await server.handleMessage({
+  await t.test('tools/call requires name parameter', async () => {
+    const response = await server.handleMessage({
+      jsonrpc: '2.0',
       method: 'tools/call',
-      params: {
-        name: 'scaffold_program',
-        arguments: {
-          programName: 'test-integration'
-        }
-      },
+      params: {},
       id: 3
     });
 
-    assert.strictEqual(result.jsonrpc, '2.0');
-    assert.ok(result.result.content);
-    assert(Array.isArray(result.result.content));
-    assert(result.result.content[0].type === 'text');
-    
-    // Content should be JSON stringified result
-    const content = JSON.parse(result.result.content[0].text);
-    assert.strictEqual(content.success, true);
-    assert.strictEqual(content.programName, 'test_integration');
+    assert.strictEqual(response.jsonrpc, '2.0');
+    assert.strictEqual(response.id, 3);
+    assert.ok(response.error);
+    assert.match(response.error.message, /requires params.name/);
   });
 
-  await t.test('tools/call with invalid tool returns error', async () => {
-    const result = await server.handleMessage({
+  await t.test('tools/call rejects unknown tool', async () => {
+    const response = await server.handleMessage({
+      jsonrpc: '2.0',
       method: 'tools/call',
       params: {
-        name: 'nonexistent_tool',
+        name: 'unknown_tool',
         arguments: {}
       },
       id: 4
     });
 
-    assert.strictEqual(result.jsonrpc, '2.0');
-    assert.ok(result.error);
-    assert(result.error.message.includes('Unknown tool'));
+    assert.strictEqual(response.jsonrpc, '2.0');
+    assert.strictEqual(response.id, 4);
+    assert.ok(response.error);
+    assert.match(response.error.message, /Unknown tool/);
   });
 
-  await t.test('unknown method returns error', async () => {
-    const result = await server.handleMessage({
-      method: 'unknown_method',
+  await t.test('tools/call executes solana_compute_discriminator', async () => {
+    const response = await server.handleMessage({
+      jsonrpc: '2.0',
+      method: 'tools/call',
+      params: {
+        name: 'solana_compute_discriminator',
+        arguments: {
+          instructionName: 'initialize'
+        }
+      },
       id: 5
     });
 
-    assert.strictEqual(result.jsonrpc, '2.0');
-    assert.ok(result.error);
-    assert(result.error.message.includes('Unknown method'));
+    assert.strictEqual(response.jsonrpc, '2.0');
+    assert.strictEqual(response.id, 5);
+    assert.ok(response.result);
+    assert.ok(response.result.content);
+    assert.strictEqual(response.result.content[0].type, 'text');
+    
+    const result = JSON.parse(response.result.content[0].text);
+    assert.strictEqual(result.success, true);
+    assert.strictEqual(result.instructionName, 'initialize');
   });
 
-  await t.test('scaffold_program with features returns enhanced code', async () => {
-    const result = await server.handleMessage({
-      method: 'tools/call',
-      params: {
-        name: 'scaffold_program',
-        arguments: {
-          programName: 'test-with-features',
-          features: ['pda', 'token']
-        }
-      },
+  await t.test('ping method returns empty result', async () => {
+    const response = await server.handleMessage({
+      jsonrpc: '2.0',
+      method: 'ping',
+      params: {},
       id: 6
     });
 
-    assert.strictEqual(result.jsonrpc, '2.0');
-    const content = JSON.parse(result.result.content[0].text);
-    assert.strictEqual(content.success, true);
-    assert(content.featureSummary || content.features, 'Should include features in response');
+    assert.strictEqual(response.jsonrpc, '2.0');
+    assert.strictEqual(response.id, 6);
+    assert.deepStrictEqual(response.result, {});
   });
 
-  await t.test('verify_onchain_discriminators tool is available', async () => {
-    const toolsList = await server.handleMessage({
-      method: 'tools/list',
+  await t.test('notifications/initialized returns null', async () => {
+    const response = await server.handleMessage({
+      jsonrpc: '2.0',
+      method: 'notifications/initialized',
+      params: {}
+    });
+
+    assert.strictEqual(response, null);
+  });
+
+  await t.test('unknown method returns error', async () => {
+    const response = await server.handleMessage({
+      jsonrpc: '2.0',
+      method: 'unknown_method',
+      params: {},
       id: 7
     });
 
-    const verifyTool = toolsList.result.tools.find(t => t.name === 'verify_onchain_discriminators');
-    assert.ok(verifyTool, 'verify_onchain_discriminators tool should exist');
-    assert.ok(verifyTool.inputSchema, 'Tool should have inputSchema');
+    assert.strictEqual(response.jsonrpc, '2.0');
+    assert.strictEqual(response.id, 7);
+    assert.ok(response.error);
+    assert.match(response.error.message, /Unknown method/);
   });
 });

@@ -16,7 +16,7 @@ import { createServer } from './mcp-server/server.js';
 
 const PORT = process.env.PORT || 3000;
 let mcpServer = null;
-const TEST_COUNT = Number.parseInt(process.env.TEST_COUNT || '74', 10);
+const TEST_COUNT = Number.parseInt(process.env.TEST_COUNT || '58', 10);
 
 // Initialize MCP server once
 const serverInit = (async () => {
