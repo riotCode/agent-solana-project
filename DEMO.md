@@ -26,20 +26,34 @@ curl http://localhost:3000/health
 #   "service": "SolAgent Forge MCP Server",
 #   "version": "0.1.0",
 #   "tools": 11,
-#   "tests": 101
+#   "tests": 74
 # }
 ```
 
 ✅ **Success criteria:**
 - Server responds with `status: ok`
 - Shows **11 tools** available
-- Shows **101 tests** passing
+- Shows **74 tests** passing
+
+### (Optional) List tools via REST
+
+```bash
+curl http://localhost:3000/tools
+```
+
+### (Optional) Call a tool via REST
+
+```bash
+curl -X POST http://localhost:3000/tools/derive_pda \
+  -H "Content-Type: application/json" \
+  -d '{"programId":"11111111111111111111111111111111","seeds":["demo"]}'
+```
 
 ---
 
 ## 2️⃣ Full Workflow Demo (3 minutes)
 
-**What it proves:** All MCP tools work end-to-end: scaffold → test → security scan → deploy.
+**What it proves:** Current tool focus works end-to-end: PDA derivation → RPC queries → scaffolding → security scan.
 
 ```bash
 cd ../generated
@@ -48,27 +62,26 @@ cd ../generated
 node demo-video.js
 
 # This runs:
-# 1. scaffold_program — generates Anchor project
-# 2. setup_testing — configures LiteSVM
-# 3. analyze_errors — parses Rust compiler errors
-# 4. scan_security — detects vulnerabilities
-# 5. generate_docs — creates TypeScript clients
-# 6. deploy_devnet — (ready for deployment)
-# 7-11. Other tools demonstrated
+# 1. derive_pda — derives a PDA from seeds
+# 2. get_account_info + get_balance — RPC queries (devnet)
+# 3. scaffold_program — generates an Anchor project skeleton
+# 4. scan_security — detects vulnerabilities in sample code
+# 5. get_program_accounts — RPC query (devnet)
+# 6. parse_transaction — transaction parsing (devnet)
 ```
 
 ✅ **Success criteria:**
-- All 6 demo sections pass ✅
+- All demo sections run ✅
+- PDA derivation succeeds (offline)
 - Scaffold generates working directory structure
-- Error analysis identifies issues
 - Security scan reports vulnerabilities
-- Documentation generation ready
+- RPC calls may succeed or gracefully report network issues
 
 ---
 
 ## 3️⃣ Test Suite Verification (30 seconds)
 
-**What it proves:** 101 automated tests covering all tools pass.
+**What it proves:** 74 automated tests covering all tools pass.
 
 ```bash
 cd ../generated
@@ -77,14 +90,14 @@ cd ../generated
 npm test
 
 # Expected output:
-# # tests 101
-# # pass 101
+# # tests 74
+# # pass 74
 # # fail 0
-# # duration_ms ~2300
+# # duration_ms ~4600
 ```
 
 ✅ **Success criteria:**
-- 101 tests passing
+- 74 tests passing
 - 0 failures
 - All 11 tools verified
 
@@ -150,23 +163,13 @@ const report = await scanSecurity({ code });
 // Reports: ARITHMETIC_OVERFLOW, MISSING_INPUT_VALIDATION
 ```
 
-### Error Analysis
-```javascript
-import { analyzeErrors } from './mcp-server/tools/error-analysis.js';
-
-const error = `error[E0425]: cannot find value 'ctx' in this scope`;
-
-const analysis = await analyzeErrors({ errorOutput: error });
-// Returns: type, severity, message, and fix suggestions
-```
-
 ---
 
 ## 📊 Verification Checklist
 
-- [ ] HTTP server responds to /health with 11 tools + 101 tests
+- [ ] HTTP server responds to /health with 11 tools + 74 tests
 - [ ] demo-video.js runs without errors
-- [ ] All 101 tests pass in ~2.3s
+- [ ] All 74 tests pass in ~4.6s
 - [ ] No uncommitted changes in git
 - [ ] README documents all tools
 - [ ] Program IDs for deployed tools visible in code
@@ -176,10 +179,10 @@ const analysis = await analyzeErrors({ errorOutput: error });
 
 ## 🏆 What You're Seeing
 
-**SolAgent Forge** is a **production-ready MCP server** that eliminates boilerplate for Solana development:
+**SolAgent Forge** is a **production-ready MCP server** that gives agents direct Solana primitives:
 
-1. **11 working MCP tools** for scaffolding, testing, deployment, security, and documentation
-2. **101 comprehensive tests** verifying all tools work end-to-end
+1. **11 working MCP tools** for RPC interaction, PDA derivation, scaffolding, deployment, and security
+2. **74 comprehensive tests** verifying all tools work end-to-end
 3. **Single runtime dependency** (@solana/web3.js) for minimal attack surface
 4. **Clean architecture** with separated concerns (tools, testing, validation)
 5. **Real utility** — other Solana agents can use these tools immediately
@@ -202,7 +205,7 @@ A: Run `git status` to check what changed, then `git diff` to review
 ## 📝 Summary
 
 This demo proves **SolAgent Forge** is:
-- ✅ **Functional** — 101 tests passing
+- ✅ **Functional** — 74 tests passing
 - ✅ **Production-ready** — clean code, well-tested
 - ✅ **Autonomous-friendly** — MCP protocol standard, easy to integrate
 - ✅ **Real utility** — solves actual Solana development pain points

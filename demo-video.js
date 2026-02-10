@@ -1,17 +1,25 @@
 #!/usr/bin/env node
 
 /**
- * SolAgent Forge - Comprehensive Demo
- * Shows full workflow: scaffold → test → deploy → analyze → security scan
+ * SolAgent Forge - RPC + PDA + Scaffolding Demo
+ * 
+ * Demonstrates the current focus of SolAgent Forge:
+ * - Solana RPC interaction
+ * - PDA derivation
+ * - Anchor scaffolding
+ * - Security scanning
+ * 
+ * Note: RPC-dependent steps may fail if devnet/mainnet is unavailable.
+ * The demo handles network failures gracefully.
  */
 
 import { scaffoldProgram } from './mcp-server/tools/scaffold.js';
-import { setupTesting } from './mcp-server/tools/testing.js';
-import { generateDocs } from './mcp-server/tools/documentation.js';
-import { deployDevnet, getDeploymentStatus, fundKeypair } from './mcp-server/tools/deploy.js';
-import { verifyDiscriminators } from './mcp-server/tools/verify-discriminator.js';
-import { analyzeErrors } from './mcp-server/tools/error-analysis.js';
 import { scanSecurity } from './mcp-server/tools/security-scanner.js';
+import { derivePda } from './mcp-server/tools/derive-pda.js';
+import { getAccountInfo } from './mcp-server/tools/get-account-info.js';
+import { getBalance } from './mcp-server/tools/get-balance.js';
+import { getProgramAccounts } from './mcp-server/tools/get-program-accounts.js';
+import { parseTransaction } from './mcp-server/tools/parse-transaction.js';
 
 const colors = {
   reset: '\x1b[0m',
@@ -20,6 +28,7 @@ const colors = {
   yellow: '\x1b[33m',
   blue: '\x1b[34m',
   cyan: '\x1b[36m',
+  gray: '\x1b[90m'
 };
 
 function log(msg, color = 'reset') {
@@ -28,101 +37,106 @@ function log(msg, color = 'reset') {
 
 function section(title) {
   console.log('\n');
-  log('═'.repeat(60), 'cyan');
+  log('═'.repeat(72), 'cyan');
   log(`▶ ${title}`, 'cyan');
-  log('═'.repeat(60), 'cyan');
+  log('═'.repeat(72), 'cyan');
+}
+
+function note(msg) {
+  log(`ℹ️  ${msg}`, 'gray');
 }
 
 async function runDemo() {
-  log('\n🚀 SolAgent Forge - Full Workflow Demo', 'bright');
-  log('Demonstrating autonomous Solana development assistance\n', 'bright');
+  log('\nSolAgent Forge — RPC + PDA + Scaffolding Demo', 'bright');
+  log('Demonstrating agent-ready Solana primitives (network tolerant)\n', 'bright');
+
+  // A stable, well-known program id to demo against
+  const SYSTEM_PROGRAM_ID = '11111111111111111111111111111111';
 
   try {
     // ============================================================
-    // STEP 1: SCAFFOLD A PROGRAM
+    // STEP 1: PDA DERIVATION
     // ============================================================
-    section('STEP 1: Scaffold Solana Program');
-    log('Generating complete Anchor project structure...', 'blue');
-    
+    section('STEP 1: Derive a PDA');
+    log('Deriving a Program Derived Address from seeds + programId...', 'blue');
+
+    const pdaResult = await derivePda({
+      programId: SYSTEM_PROGRAM_ID,
+      seeds: ['solagent-forge', 'demo']
+    });
+
+    if (pdaResult.success) {
+      log('✅ PDA derived successfully', 'green');
+      log(`   programId: ${pdaResult.programId}`, 'green');
+      log(`   pda:      ${pdaResult.pda}`, 'green');
+      log(`   bump:     ${pdaResult.bump}`, 'green');
+    } else {
+      log(`⚠️  PDA derivation failed: ${pdaResult.error}`, 'yellow');
+    }
+
+    // ============================================================
+    // STEP 2: RPC QUERIES (ACCOUNT INFO + BALANCE)
+    // ============================================================
+    section('STEP 2: RPC Queries (Account Info + Balance)');
+    log('Fetching account info for the System Program...', 'blue');
+
+    const acct = await getAccountInfo({
+      publicKey: SYSTEM_PROGRAM_ID,
+      cluster: 'devnet'
+    });
+
+    if (acct.success) {
+      if (acct.exists) {
+        log('✅ Account exists on-chain', 'green');
+        log(`   owner:       ${acct.accountInfo.owner}`, 'green');
+        log(`   executable:  ${acct.accountInfo.executable}`, 'green');
+        log(`   dataLength:  ${acct.accountInfo.dataLength}`, 'green');
+      } else {
+        log('⚠️  Account does not exist on this cluster', 'yellow');
+      }
+    } else {
+      note(`RPC unavailable (account info): ${acct.error}`);
+    }
+
+    log('Fetching SOL balance for the System Program address...', 'blue');
+    const bal = await getBalance({
+      publicKey: SYSTEM_PROGRAM_ID,
+      cluster: 'devnet'
+    });
+
+    if (bal.success) {
+      log('✅ Balance fetched', 'green');
+      log(`   ${bal.balance.formatted}`, 'green');
+    } else {
+      note(`RPC unavailable (balance): ${bal.error}`);
+    }
+
+    // ============================================================
+    // STEP 3: SCAFFOLD AN ANCHOR PROGRAM
+    // ============================================================
+    section('STEP 3: Scaffold an Anchor Program');
+    log('Generating an Anchor project skeleton (PDA + token templates)...', 'blue');
+
     const scaffoldResult = await scaffoldProgram({
       programName: 'demo-vault',
       features: ['pda', 'token']
     });
 
     if (scaffoldResult.success) {
-      log(`✅ Program scaffolded: ${scaffoldResult.projectPath}`, 'green');
+      log('✅ Program scaffolded successfully', 'green');
+      log(`   projectPath: ${scaffoldResult.projectPath}`, 'green');
       if (scaffoldResult.filesCreated) {
-        log(`   Files created: ${scaffoldResult.filesCreated}`, 'green');
+        log(`   filesCreated: ${scaffoldResult.filesCreated}`, 'green');
       }
-      log(`   Project ready for testing`, 'green');
     } else {
-      log(`⚠️  Scaffold info: ${scaffoldResult.details || scaffoldResult.message}`, 'yellow');
-    }
-
-    // ============================================================
-    // STEP 2: SETUP TESTING
-    // ============================================================
-    section('STEP 2: Configure Testing Framework');
-    log('Setting up LiteSVM for fast local testing...', 'blue');
-
-    const testingResult = await setupTesting({
-      framework: 'litesvm'
-    });
-
-    if (testingResult.success) {
-      log(`✅ Testing framework configured`, 'green');
-      log(`   Framework: ${testingResult.framework}`, 'green');
-      if (testingResult.filesSetup) {
-        log(`   Files: ${testingResult.filesSetup.join(', ')}`, 'green');
-      }
-    }
-
-    // ============================================================
-    // STEP 3: DEMONSTRATE ERROR ANALYSIS
-    // ============================================================
-    section('STEP 3: Error Analysis - Real Compiler Error');
-    
-    const sampleError = `error[E0425]: cannot find value 'ctx' in this scope
-     --> src/lib.rs:12:20
-      |
-    12 |     pub fn init(mut ctx: Context<Initialize>, authority: Pubkey) -> Result<()> {
-       |             ^^^ not found in this scope
-       |
-    help: a trait with this name exists, but is only implemented for an array of a specific size; consider casting to a slice instead
-       |-    let ctx = ctx.accounts;
-       |
-
-    error[E0308]: mismatched types
-     --> src/lib.rs:25:28
-      |
-    25 |         ctx.accounts.vault.balance = amount; // forgot u64 cast
-       |                                       ^^^^^^ expected u64, found i32`;
-
-    log('Analyzing Anchor compiler error...', 'blue');
-    const errorResult = await analyzeErrors({
-      errorOutput: sampleError,
-      errorType: 'compilation'
-    });
-
-    if (errorResult.success) {
-      log(`✅ Error analysis complete`, 'green');
-      log(`   Errors found: ${errorResult.errorCount}`, 'green');
-      
-      if (errorResult.errors && errorResult.errors.length > 0) {
-        errorResult.errors.slice(0, 2).forEach(err => {
-          log(`\n   📌 ${err.category} (${err.severity})`, 'yellow');
-          log(`      ${err.message}`, 'yellow');
-          if (err.fix) {
-            log(`      Fix: ${err.fix}`, 'green');
-          }
-        });
-      }
+      log(`⚠️  Scaffold returned info: ${scaffoldResult.details || scaffoldResult.message || scaffoldResult.error}`, 'yellow');
     }
 
     // ============================================================
     // STEP 4: SECURITY SCANNING
     // ============================================================
-    section('STEP 4: Security Vulnerability Scan');
+    section('STEP 4: Security Scan');
+    log('Scanning sample Anchor code for common vulnerabilities...', 'blue');
 
     const sampleCode = `
 #[program]
@@ -141,121 +155,87 @@ pub mod demo_vault {
         ctx.accounts.vault.balance = ctx.accounts.vault.balance + amount;
         Ok(())
     }
+}
+`;
 
-    pub fn check_oracle(ctx: Context<CheckOracle>) -> Result<()> {
-        // ❌ Oracle data used without staleness check
-        let price = ctx.accounts.pyth_oracle.price();
-        let fair_value = 1000000 / price;
-        Ok(())
-    }
-}`;
-
-    log('Scanning program code for security vulnerabilities...', 'blue');
     const securityResult = await scanSecurity({
       code: sampleCode,
-      codeType: 'rust'
+      codeType: 'rust',
+      severity: 'medium'
     });
 
     if (securityResult.success) {
-      log(`✅ Security scan complete`, 'green');
-      log(`   Vulnerabilities found: ${securityResult.vulnerabilityCount}`, 'green');
-      
-      if (securityResult.vulnerabilities && securityResult.vulnerabilities.length > 0) {
-        securityResult.vulnerabilities.slice(0, 3).forEach(vuln => {
-          const severity = vuln.severity === 'critical' ? '🔴' : '🟡';
-          log(`\n   ${severity} ${vuln.id} (${vuln.severity})`, 'yellow');
-          log(`      ${vuln.description}`, 'yellow');
-          if (vuln.fix) {
-            log(`      Recommendation: ${vuln.fix}`, 'green');
-          }
-        });
+      log('✅ Security scan complete', 'green');
+      log(`   vulnerabilityCount: ${securityResult.vulnerabilityCount}`, 'green');
+      const top = (securityResult.vulnerabilities || []).slice(0, 3);
+      for (const v of top) {
+        log(`   - ${v.id} (${v.severity}): ${v.description}`, 'yellow');
       }
+    } else {
+      log(`⚠️  Security scan failed: ${securityResult.error}`, 'yellow');
     }
 
     // ============================================================
-    // STEP 5: DOCUMENTATION GENERATION
+    // STEP 5: PROGRAM ACCOUNTS QUERY
     // ============================================================
-    section('STEP 5: Generate Documentation');
-    log('Creating TypeScript client library from IDL...', 'blue');
+    section('STEP 5: Query Program Accounts');
+    log('Querying accounts owned by the System Program (limited)...', 'blue');
 
-    try {
-      const docResult = await generateDocs({
-        idlPath: 'target/idl/demo_vault.json',
-        format: 'typescript'
-      });
-
-      if (docResult.success) {
-        log(`✅ Documentation generated`, 'green');
-        log(`   Output file: ${docResult.outputPath}`, 'green');
-        log(`   Format: TypeScript client SDK`, 'green');
-      }
-    } catch (err) {
-      log(`ℹ️  (In production, after anchor build)`, 'yellow');
-      log(`✅ Documentation would generate:`, 'green');
-      log(`   - TypeScript client SDK`, 'green');
-      log(`   - API reference (Markdown)`, 'green');
-      log(`   - Integration examples`, 'green');
-    }
-
-    // ============================================================
-    // STEP 6: DEPLOYMENT SIMULATION
-    // ============================================================
-    section('STEP 6: Deployment Status Check');
-    log('Example: Checking deployed program on devnet...', 'blue');
-    log('   Program ID: ABC123...XYZ', 'blue');
-    log('   Cluster: devnet', 'blue');
-
-    log(`\n✅ Deployment would execute on devnet with:`, 'green');
-    log(`   - Anchor build (generates IDL)`, 'green');
-    log(`   - Program deployment to chain`, 'green');
-    log(`   - Verification via RPC`, 'green');
-
-    // ============================================================
-    // SUMMARY
-    // ============================================================
-    section('Demo Summary - SolAgent Forge Tools');
-
-    const tools = [
-      { name: 'scaffold_program', status: 'Demo Complete ✅' },
-      { name: 'setup_testing', status: 'Configured ✅' },
-      { name: 'analyze_errors', status: 'Demonstrated ✅' },
-      { name: 'scan_security', status: 'Demonstrated ✅' },
-      { name: 'generate_docs', status: 'Ready ✅' },
-      { name: 'deploy_devnet', status: 'Ready ✅' },
-      { name: 'verify_discriminators', status: 'Available ✅' },
-      { name: 'verify_onchain_discriminators', status: 'Available ✅' },
-      { name: 'fund_keypair', status: 'Available ✅' },
-      { name: 'decode_anchor_idl', status: 'Available ✅' },
-      { name: 'mcp_ping', status: 'Available ✅' }
-    ];
-
-    tools.forEach(tool => {
-      log(`  ${tool.status}  ${tool.name}`, 'green');
+    const progAccts = await getProgramAccounts({
+      programId: SYSTEM_PROGRAM_ID,
+      cluster: 'devnet',
+      limit: 3
     });
 
-    log('\n📊 Test Coverage:', 'bright');
-    log('  101 tests passing across all tools', 'green');
-    log('  Full MCP protocol compliance', 'green');
-    log('  Production-ready security scanning', 'green');
+    if (progAccts.success) {
+      log('✅ Program accounts query succeeded', 'green');
+      log(`   totalAccounts: ${progAccts.totalAccounts}`, 'green');
+      log(`   returnedAccounts: ${progAccts.returnedAccounts}`, 'green');
+      for (const a of (progAccts.accounts || [])) {
+        log(`   - ${a.publicKey} (lamports=${a.lamports}, dataLength=${a.dataLength})`, 'gray');
+      }
+    } else {
+      note(`RPC unavailable (program accounts): ${progAccts.error}`);
+    }
 
-    log('\n🎯 Value Proposition:', 'bright');
-    log('  • Autonomous scaffold + testing setup', 'blue');
-    log('  • Real-time error analysis & fixes', 'blue');
-    log('  • Security vulnerability detection', 'blue');
-    log('  • Auto-generated TypeScript clients', 'blue');
-    log('  • On-chain program verification', 'blue');
+    // ============================================================
+    // STEP 6: TRANSACTION PARSING
+    // ============================================================
+    section('STEP 6: Parse a Transaction');
+    log('Attempting to parse a (likely non-existent) signature on devnet...', 'blue');
 
-    log('\n✨ Ready for Production Deployment', 'bright');
-    log('   Agents can now build Solana projects autonomously\n', 'bright');
+    const tx = await parseTransaction({
+      signature: '1'.repeat(88),
+      cluster: 'devnet'
+    });
 
-  } catch (error) {
-    log(`\n❌ Demo error: ${error.message}`, 'red');
-    console.error(error);
+    if (tx.success) {
+      if (tx.exists) {
+        log('✅ Transaction found and parsed', 'green');
+        log(`   slot: ${tx.transaction.slot}`, 'green');
+        log(`   status: ${tx.transaction.status}`, 'green');
+        log(`   fee: ${tx.transaction.fee}`, 'green');
+        log(`   instructions: ${tx.transaction.instructions.length}`, 'green');
+      } else {
+        log('✅ Transaction not found (expected for demo signature)', 'green');
+      }
+    } else {
+      note(`RPC unavailable (parse transaction): ${tx.error}`);
+    }
+
+    // ============================================================
+    // DONE
+    // ============================================================
+    section('DONE');
+    log('✅ Demo completed', 'green');
+    log('If RPC calls failed, re-run later or set a custom rpcUrl in tool args.', 'gray');
+    log('', 'reset');
+
+  } catch (err) {
+    log('❌ Demo failed unexpectedly', 'yellow');
+    console.error(err);
+    process.exit(1);
   }
 }
 
-// Run the demo
-runDemo().catch(err => {
-  log(`Fatal error: ${err.message}`, 'red');
-  process.exit(1);
-});
+runDemo();
