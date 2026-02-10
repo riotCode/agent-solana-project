@@ -1,57 +1,69 @@
 ---
-name: solana-agent-forge
-version: 0.1.0
-description: MCP server with 11 Solana development tools for autonomous agent scaffolding, testing, deployment, and analysis
+name: solagent-forge
+version: 0.2.0
+description: MCP server for Solana RPC interaction, PDA derivation, and Anchor scaffolding
 author: Riot Agent (@riotweb3)
 homepage: https://github.com/riotCode/agent-solana-project
-keywords: [solana, anchor, mcp, scaffolding, testing, deployment, development, agents]
+keywords: [solana, rpc, pda, anchor, mcp, blockchain, agents, crypto]
 ---
 
 # SolAgent Forge
 
-An MCP (Model Context Protocol) server providing AI agents with autonomous Solana development capabilities. Scaffold programs, set up tests, deploy to devnet, generate documentation, analyze security, and verify on-chain discriminators — all without human intervention.
+A Model Context Protocol (MCP) server providing AI agents with direct Solana blockchain interaction, Program Derived Address (PDA) cryptography, and Anchor program development tools.
 
 ## Features
 
-- **11 MCP Tools** — scaffold, testing, documentation, deployment, security analysis, discriminators
-- **Production-Ready** — 101/101 tests passing, zero external dependencies
-- **HTTP Accessible** — Test tools via simple POST requests without MCP protocol knowledge
-- **Zero Configuration** — Pure Node.js, single runtime dependency (@solana/web3.js)
+- **11 MCP Tools** — RPC queries, PDA derivation, scaffolding, deployment, security
+- **Production-Ready** — 74/74 tests passing, single dependency (@solana/web3.js)
+- **Direct RPC Access** — Query accounts, balances, transactions, program data
+- **PDA Derivation** — Essential cryptographic primitive for Solana development
+- **HTTP Accessible** — Test tools via REST API without MCP protocol setup
+- **npx Executable** — Run directly: `npx @riotagent/solagent-forge`
 
 ## Quick Start
 
-### Option 1: Use via HTTP (Recommended)
+### Option 1: npx (Fastest)
 
 ```bash
-# Start server
+# Run MCP server
+npx @riotagent/solagent-forge
+
+# Or configure in MCP client (Claude Desktop, etc.)
+{
+  "mcpServers": {
+    "solagent-forge": {
+      "command": "npx",
+      "args": ["-y", "@riotagent/solagent-forge"]
+    }
+  }
+}
+```
+
+### Option 2: HTTP Server (For REST API)
+
+```bash
+# Clone and install
+git clone https://github.com/riotCode/agent-solana-project.git
+cd agent-solana-project
+npm install
+
+# Start HTTP server
 node http-server.js
 
 # Health check
 curl http://localhost:3000/health
-
-# List all tools
-curl -X POST http://localhost:3000/mcp \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc": "2.0", "method": "tools/list", "params": {}, "id": 1}'
 ```
-
-### Option 2: Use as MCP Server
-
-```bash
-npm install
-node mcp-server/server.js
-```
-
-Then connect any MCP client (OpenClaw, Clawi, custom client, etc).
 
 ## Tools
 
-### 1. scaffold_program
-Generate a complete Anchor program structure with optional features.
+### Scaffolding & Security
+
+#### 1. scaffold_program
+Generate Anchor program structure with PDA/CPI/token templates.
 
 **Parameters:**
-- `programName` (string, required): Name of the program (e.g., "token-vault")
-- `features` (array, optional): Features to include: ["pda", "cpi", "token"]
+- `programName` (string, required): Program name (e.g., "vault")
+- `features` (array, optional): Features: ["pda", "cpi", "token"]
 
 **Example:**
 ```json
@@ -61,144 +73,108 @@ Generate a complete Anchor program structure with optional features.
   "params": {
     "name": "scaffold_program",
     "arguments": {
-      "programName": "escrow",
-      "features": ["pda", "cpi"]
+      "programName": "token-vault",
+      "features": ["pda", "token"]
     }
   },
   "id": 1
 }
 ```
 
-**Output:** Complete Anchor project in `programs/escrow/` with PDA and CPI integration patterns.
-
-### 2. setup_testing
-Configure test environment (LiteSVM, Mollusk, or test-validator).
-
-**Parameters:**
-- `framework` (string, required, enum: "litesvm", "mollusk", "test-validator"): Testing framework to use
-
-**Example:**
-```json
-{
-  "name": "setup_testing",
-  "arguments": {
-    "framework": "litesvm"
-  }
-}
+**HTTP:**
+```bash
+curl -X POST http://localhost:3000/tools/scaffold_program \
+  -H "Content-Type: application/json" \
+  -d '{"programName": "vault", "features": ["pda"]}'
 ```
 
-**Output:** Ready-to-use test suite with framework imports and test patterns.
+---
 
-### 3. generate_docs
-Generate API documentation from program IDL (Markdown, HTML, or TypeScript).
+#### 2. scan_security
+Detect 7 vulnerability patterns in Rust/TypeScript code.
 
-**Parameters:**
-- `idlPath` (string, required): Path to IDL JSON file
-- `format` (string, optional, enum: "markdown", "html", "typescript"): Output format (default: "markdown")
-
-**Example:**
-```json
-{
-  "name": "generate_docs",
-  "arguments": {
-    "idlPath": "target/idl/escrow.json",
-    "format": "markdown"
-  }
-}
-```
-
-**Output:** Professional API documentation with instruction descriptions, account requirements, and examples.
-
-### 4. deploy_devnet
-Deploy compiled Anchor program to Solana devnet with automatic build and airdrop.
+**Detects:**
+- Reentrancy attacks
+- Arithmetic overflow/underflow
+- Missing authority checks
+- Oracle manipulation
+- PDA bump not stored
+- Unsafe deserialization
+- Missing input validation
 
 **Parameters:**
-- `programPath` (string, required): Path to Anchor project root
-- `cluster` (string, optional, enum: "devnet", "testnet", "mainnet-beta"): Solana cluster
-- `keypair` (string, optional): Path to keypair file (uses default if not provided)
-- `skipBuild` (boolean, optional): Skip anchor build step
-
-**Example:**
-```json
-{
-  "name": "deploy_devnet",
-  "arguments": {
-    "programPath": "programs/escrow",
-    "cluster": "devnet"
-  }
-}
-```
-
-**Output:** Program deployed, verification link, on-chain account info.
-
-### 5. get_deployment_status
-Check deployment status of a program on-chain.
-
-**Parameters:**
-- `programId` (string, required): Program ID (public key)
-- `cluster` (string, optional, enum: "devnet", "testnet", "mainnet-beta"): Solana cluster
-
-### 6. fund_keypair
-Airdrop SOL to a keypair on devnet for testing.
-
-**Parameters:**
-- `publicKey` (string, required): Public key to receive SOL
-- `cluster` (string, optional, enum: "devnet", "testnet"): Solana cluster
-- `amount` (number, optional): Amount of SOL to airdrop (default: 2)
-
-### 7. scan_security
-Analyze Rust/TypeScript code for common security vulnerabilities (8 categories, 50+ tests).
-
-**Parameters:**
-- `code` (string, required): Program source code to scan
-- `codeType` (string, optional, enum: "rust", "typescript"): Programming language (default: "rust")
-- `severity` (string, optional, enum: "low", "medium", "high", "critical"): Minimum severity to report (default: "medium")
+- `code` (string, required): Source code to scan
+- `codeType` (string, optional, enum: "rust", "typescript"): Language (default: "rust")
+- `severity` (string, optional, enum: "low", "medium", "high", "critical"): Min severity (default: "medium")
 
 **Example:**
 ```json
 {
   "name": "scan_security",
   "arguments": {
-    "code": "pub fn initialize(ctx: Context<Initialize>) { ... }"
+    "code": "pub fn transfer(ctx: Context<Transfer>, amount: u64) { ... }",
+    "codeType": "rust",
+    "severity": "medium"
   }
 }
 ```
 
-**Output:** Risk score (0-100), identified vulnerabilities, CWE references, recommendations.
+**Output:** Array of vulnerabilities with severity, CWE references, fix recommendations.
 
-### 8. verify_discriminators
-Verify instruction discriminators match deployed program on-chain.
+---
+
+### Deployment & On-Chain Interaction
+
+#### 3. deploy_devnet
+Build and deploy Anchor program to Solana devnet.
 
 **Parameters:**
-- `idlPath` (string, required): Path to IDL JSON file
-- `programId` (string, required): Program ID (public key)
-- `cluster` (string, optional): Solana cluster
-- `rpcUrl` (string, optional): Custom RPC URL
+- `programPath` (string, optional): Path to Anchor project (default: ".")
+- `cluster` (string, optional, enum: "devnet", "testnet", "mainnet-beta"): Target cluster
+- `keypair` (string, optional): Path to keypair file
+- `skipBuild` (boolean, optional): Skip `anchor build` step
 
 **Example:**
 ```json
 {
-  "name": "verify_discriminators",
+  "name": "deploy_devnet",
   "arguments": {
-    "idlPath": "target/idl/escrow.json",
-    "programId": "EscrowXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    "programPath": "./programs/vault",
+    "cluster": "devnet"
   }
 }
 ```
 
-### 9. get_instruction_signature
-Get SHA-256 discriminator for a specific instruction.
+---
+
+#### 4. get_deployment_status
+Check if a program is deployed on-chain.
 
 **Parameters:**
-- `idlPath` (string, required): Path to IDL JSON file
-- `instructionName` (string, required): Instruction name (e.g., "initialize")
+- `programId` (string, required): Program ID (base58 public key)
+- `cluster` (string, optional): Cluster (default: "devnet")
 
-### 10. verify_onchain_discriminators
-Verify instruction discriminators on-chain via RPC.
+**Example:**
+```json
+{
+  "name": "get_deployment_status",
+  "arguments": {
+    "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    "cluster": "mainnet-beta"
+  }
+}
+```
+
+**Output:** `{ deployed: true/false, executable: true/false, lamports: number, owner: string }`
+
+---
+
+#### 5. verify_onchain_discriminators
+Verify program IDL matches on-chain state.
 
 **Parameters:**
-- `programId` (string, required): Program ID (public key)
-- `cluster` (string, optional): Solana cluster
+- `programId` (string, required): Program ID
+- `cluster` (string, optional): Cluster (default: "devnet")
 - `rpcUrl` (string, optional): Custom RPC URL
 
 **Example:**
@@ -206,170 +182,291 @@ Verify instruction discriminators on-chain via RPC.
 {
   "name": "verify_onchain_discriminators",
   "arguments": {
-    "programId": "EscrowXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "programId": "YourProgramIDHere",
     "cluster": "devnet"
   }
 }
 ```
 
-**Output:** On-chain program verification, discriminator matches, health status.
+---
 
-### 11. analyze_errors
-Interpret Anchor/Rust compiler errors with fixes.
+#### 6. fund_keypair
+Airdrop SOL to devnet/testnet keypair for testing.
 
 **Parameters:**
-- `errorOutput` (string, required): Raw compiler error output or error message
-- `errorType` (string, optional, enum: "compilation", "runtime", "test"): Type of error
-- `projectPath` (string, optional): Path to project root
+- `publicKey` (string, required): Public key (base58)
+- `cluster` (string, optional, enum: "devnet", "testnet"): Cluster
+- `amount` (number, optional): SOL amount (default: 2)
 
 **Example:**
 ```json
 {
-  "name": "analyze_errors",
+  "name": "fund_keypair",
   "arguments": {
-    "errorOutput": "Custom error 0x1770: invalid account owner"
+    "publicKey": "YourPublicKeyHere",
+    "cluster": "devnet",
+    "amount": 5
   }
 }
 ```
 
-**Output:** Error explanation, root cause, suggested fixes.
+---
 
-## API Endpoint Reference
+### RPC & Blockchain Queries
 
-### Health Check
-```
-GET /health
-```
+#### 7. derive_pda
+Derive Program Derived Address from seeds.
 
-Returns:
+**Parameters:**
+- `programId` (string, required): Program ID (base58)
+- `seeds` (array of strings, optional): UTF-8 seed strings
+- `seedBytes` (array of byte arrays, optional): Raw byte seeds
+
+**Example:**
 ```json
 {
-  "status": "ok",
-  "service": "SolAgent Forge MCP Server",
-  "version": "0.1.0",
-  "tools": 11,
-  "tests": 101
-}
-```
-
-### MCP Endpoint
-```
-POST /mcp
-Content-Type: application/json
-
-{
-  "jsonrpc": "2.0",
-  "method": "tools/call",
-  "params": {
-    "name": "tool_name",
-    "arguments": { ... }
-  },
-  "id": 1
-}
-```
-
-## Integration Examples
-
-### With AgentPay (Escrow Contracts)
-```json
-{
-  "name": "scaffold_program",
+  "name": "derive_pda",
   "arguments": {
-    "programName": "agentpay_escrow",
-    "features": ["pda"]
+    "programId": "11111111111111111111111111111111",
+    "seeds": ["metadata", "my-token"]
   }
 }
 ```
 
-Output: Escrow PDA structure, ready for AgentPay ZK circuits.
+**Output:** `{ pda: "...", bump: 254, derivation: {...} }`
 
-### With CLAWIN (Betting Contracts)
+---
+
+#### 8. get_account_info
+Fetch raw account data from Solana blockchain.
+
+**Parameters:**
+- `publicKey` (string, required): Account public key
+- `cluster` (string, optional): Cluster (default: "devnet")
+- `rpcUrl` (string, optional): Custom RPC URL
+- `encoding` (string, optional, enum: "base64", "base58", "jsonParsed"): Data encoding
+
+**Example:**
 ```json
 {
-  "name": "scaffold_program",
+  "name": "get_account_info",
   "arguments": {
-    "programName": "clawin_bet",
-    "features": ["cpi"]
+    "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    "cluster": "mainnet-beta",
+    "encoding": "base64"
   }
 }
 ```
 
-Output: Betting contract scaffold with token integration.
+**Output:** `{ exists: true, lamports, owner, executable, rentEpoch, dataLength, data }`
 
-### With MoltLaunch (Verified Deployments)
+---
+
+#### 9. get_balance
+Get SOL balance for a public key.
+
+**Parameters:**
+- `publicKey` (string, required): Public key (base58)
+- `cluster` (string, optional): Cluster (default: "devnet")
+- `rpcUrl` (string, optional): Custom RPC URL
+
+**Example:**
 ```json
 {
-  "name": "scan_security",
+  "name": "get_balance",
   "arguments": {
-    "code": "(full program code)"
+    "publicKey": "YourWalletHere",
+    "cluster": "devnet"
   }
 }
 ```
 
-Output: Security report for verified scaffold identity.
+**Output:** `{ balance: { lamports: 2000000000, sol: 2.0, formatted: "2.000000000 SOL" } }`
 
-## For Agents
+---
 
-Your agent can use this skill to:
-- **Autonomously scaffold** new programs without templates
-- **Test locally** before devnet deployment
-- **Auto-document** using IDL analysis
-- **Security-review** code automatically
-- **Deploy** programs and verify on-chain
-- **Analyze errors** from failed instructions
+#### 10. get_program_accounts
+Query all accounts owned by a program.
 
-## Installation
+**Parameters:**
+- `programId` (string, required): Program ID (base58)
+- `cluster` (string, optional): Cluster (default: "devnet")
+- `rpcUrl` (string, optional): Custom RPC URL
+- `limit` (number, optional): Max accounts to return (default: 10)
+- `filters` (array, optional): Account filters (dataSize, memcmp)
 
-### Option 1: Clone and Run
+**Example:**
+```json
+{
+  "name": "get_program_accounts",
+  "arguments": {
+    "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    "cluster": "mainnet-beta",
+    "limit": 5
+  }
+}
+```
+
+**Output:** Array of accounts with publicKey, lamports, owner, dataLength.
+
+---
+
+#### 11. parse_transaction
+Fetch and parse a Solana transaction.
+
+**Parameters:**
+- `signature` (string, required): Transaction signature (base58)
+- `cluster` (string, optional): Cluster (default: "devnet")
+- `rpcUrl` (string, optional): Custom RPC URL
+
+**Example:**
+```json
+{
+  "name": "parse_transaction",
+  "arguments": {
+    "signature": "5Z...(88 char signature)",
+    "cluster": "mainnet-beta"
+  }
+}
+```
+
+**Output:** Transaction details including slot, fee, status, instructions, log messages, balance changes.
+
+---
+
+## HTTP API
+
+All tools are accessible via HTTP POST at `http://localhost:3000/tools/{toolName}`:
+
 ```bash
-git clone https://github.com/riotCode/agent-solana-project
-cd generated
-npm install
-node http-server.js
+# Derive PDA
+curl -X POST http://localhost:3000/tools/derive_pda \
+  -H "Content-Type: application/json" \
+  -d '{"programId": "11111111111111111111111111111111", "seeds": ["test"]}'
+
+# Get balance
+curl -X POST http://localhost:3000/tools/get_balance \
+  -H "Content-Type: application/json" \
+  -d '{"publicKey": "YourKeyHere", "cluster": "devnet"}'
+
+# Get account info
+curl -X POST http://localhost:3000/tools/get_account_info \
+  -H "Content-Type: application/json" \
+  -d '{"publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"}'
 ```
 
-### Option 2: Deploy to Railway (3 minutes)
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for step-by-step guide.
-
-### Option 3: Docker
+**Health check:**
 ```bash
-docker build -t solagent-forge .
-docker run -p 3000:3000 solagent-forge
+curl http://localhost:3000/health
+# {"status":"ok","service":"SolAgent Forge MCP Server","tools":11,"tests":74}
 ```
+
+---
 
 ## Testing
 
 ```bash
-npm test  # 101/101 tests passing (3.2s)
+# Run all 74 tests
+npm test
+
+# Expected output:
+# tests 74
+# pass 74
+# fail 0
+# duration_ms ~4600
 ```
-
-## Documentation
-
-- **DEMO.md** — Detailed judge walkthrough with 15+ curl examples
-- **DEPLOYMENT.md** — Railway/Fly.io production deployment
-- **README.md** — Architecture and tool reference
-- **GitHub** — Full source code with inline documentation
-
-## Performance
-
-- **Initialization:** ~2.5s (once per server start)
-- **Per-request:** <100ms (scaffold_program, scan_security, etc)
-- **Test suite:** 3.2s (101 tests)
-- **Memory footprint:** ~80MB (Node.js + deps)
-
-## Architecture
-
-**Core:** 11 tools (2,656 LOC Rust/TypeScript)
-**HTTP Server:** 165 LOC pure Node.js
-**Tests:** 1,247 LOC (101 tests)
-**Dependencies:** 1 runtime (@solana/web3.js)
-
-## For Questions
-
-- **Issues:** https://github.com/riotCode/agent-solana-project/issues
-- **Forum:** https://colosseum.com/agent-hackathon/forum
-- **Project:** https://colosseum.com/agent-hackathon/projects/solagent-forge
 
 ---
 
-Built for the Colosseum Agent Hackathon. 🏗️
+## Use Cases
+
+### For Autonomous Agents
+
+1. **PDA-based programs** — Derive PDAs before scaffolding program structure
+2. **Account inspection** — Verify on-chain state during development
+3. **Balance monitoring** — Track SOL balances for test wallets
+4. **Transaction forensics** — Parse and analyze past transactions
+5. **Program account queries** — Find all accounts owned by a program
+6. **Security scanning** — Detect vulnerabilities before deployment
+
+### Agent Workflow Example
+
+```javascript
+// 1. Derive PDA for program metadata
+const pda = await call('derive_pda', {
+  programId: 'MyProgramID',
+  seeds: ['metadata', 'config']
+});
+
+// 2. Scaffold program with PDA template
+const scaffold = await call('scaffold_program', {
+  programName: 'metadata-registry',
+  features: ['pda']
+});
+
+// 3. Deploy to devnet
+const deploy = await call('deploy_devnet', {
+  programPath: './programs/metadata-registry',
+  cluster: 'devnet'
+});
+
+// 4. Verify deployment
+const status = await call('get_deployment_status', {
+  programId: deploy.programId,
+  cluster: 'devnet'
+});
+
+// 5. Scan for security issues
+const security = await call('scan_security', {
+  code: readFile('./programs/metadata-registry/src/lib.rs'),
+  codeType: 'rust'
+});
+
+// 6. Get program accounts
+const accounts = await call('get_program_accounts', {
+  programId: deploy.programId,
+  cluster: 'devnet',
+  limit: 10
+});
+```
+
+---
+
+## Architecture
+
+- **Runtime:** Node.js 22+ (ESM modules)
+- **Protocol:** MCP JSON-RPC 2.0
+- **Dependency:** @solana/web3.js (single runtime dependency)
+- **Tests:** 74 tests, ~4.6s runtime
+- **LOC:** 1,705 lines (tool implementations)
+
+---
+
+## Deployment
+
+### Local Development
+```bash
+npm install
+npm test
+node mcp-server/index.js
+```
+
+### Production
+- **Railway:** See [DEPLOY_LIVE.md](./DEPLOY_LIVE.md)
+- **Fly.io:** See [DEPLOYMENT.md](./DEPLOYMENT.md)
+- **Custom:** Dockerized, zero external services required
+
+---
+
+## License
+
+MIT
+
+---
+
+## Links
+
+- **Repository:** https://github.com/riotCode/agent-solana-project
+- **Live Demo:** https://agent-solana-project.fly.dev/
+- **Forum:** https://agents.colosseum.com/forum
+- **Hackathon:** Colosseum Agent Hackathon (Feb 2-12, 2026)
