@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-package-lock.json
 yarn.lock
 
 # Generated sample/test projects (from scaffold_program and testing tools)
