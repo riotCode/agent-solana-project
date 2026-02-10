@@ -28,15 +28,22 @@ test('MCP Server integration', async (t) => {
 
     assert.strictEqual(result.jsonrpc, '2.0');
     assert.ok(Array.isArray(result.result.tools));
-    assert.strictEqual(result.result.tools.length, 6, 'Should have exactly 6 tools');
+    assert.strictEqual(result.result.tools.length, 11, 'Should have exactly 11 tools');
     
     const toolNames = result.result.tools.map(t => t.name);
+    // Original 6 tools
     assert(toolNames.includes('scaffold_program'));
     assert(toolNames.includes('deploy_devnet'));
     assert(toolNames.includes('get_deployment_status'));
     assert(toolNames.includes('fund_keypair'));
     assert(toolNames.includes('verify_onchain_discriminators'));
     assert(toolNames.includes('scan_security'));
+    // New 5 RPC tools
+    assert(toolNames.includes('derive_pda'));
+    assert(toolNames.includes('get_account_info'));
+    assert(toolNames.includes('get_balance'));
+    assert(toolNames.includes('get_program_accounts'));
+    assert(toolNames.includes('parse_transaction'));
   });
 
   await t.test('tools/call scaffold_program returns result', async () => {

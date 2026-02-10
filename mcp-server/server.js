@@ -7,6 +7,11 @@ import { scaffoldProgram } from './tools/scaffold.js';
 import { deployDevnet, getDeploymentStatus, fundKeypair } from './tools/deploy.js';
 import { verifyOnchainDiscriminators } from './tools/verify-onchain-discriminators.js';
 import { scanSecurity } from './tools/security-scanner.js';
+import { derivePda } from './tools/derive-pda.js';
+import { getAccountInfo } from './tools/get-account-info.js';
+import { getBalance } from './tools/get-balance.js';
+import { getProgramAccounts } from './tools/get-program-accounts.js';
+import { parseTransaction } from './tools/parse-transaction.js';
 
 const TOOLS = [
   {
@@ -142,6 +147,138 @@ const TOOLS = [
       },
       required: ['code']
     }
+  },
+  {
+    name: 'derive_pda',
+    description: 'Derive a Program Derived Address (PDA) from seeds and program ID',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        programId: {
+          type: 'string',
+          description: 'Program ID (base58 public key)'
+        },
+        seeds: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Array of seed strings (will be UTF-8 encoded)'
+        },
+        seedBytes: {
+          type: 'array',
+          items: {
+            type: 'array',
+            items: { type: 'number' }
+          },
+          description: 'Array of raw byte arrays (for non-UTF8 seeds)'
+        }
+      },
+      required: ['programId']
+    }
+  },
+  {
+    name: 'get_account_info',
+    description: 'Fetch account information from Solana blockchain',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        publicKey: {
+          type: 'string',
+          description: 'Account public key (base58)'
+        },
+        cluster: {
+          type: 'string',
+          enum: ['devnet', 'testnet', 'mainnet-beta', 'localhost'],
+          description: 'Solana cluster (default: devnet)'
+        },
+        rpcUrl: {
+          type: 'string',
+          description: 'Custom RPC URL (optional)'
+        },
+        encoding: {
+          type: 'string',
+          enum: ['base64', 'base58', 'jsonParsed'],
+          description: 'Data encoding (default: base64)'
+        }
+      },
+      required: ['publicKey']
+    }
+  },
+  {
+    name: 'get_balance',
+    description: 'Get SOL balance for a public key',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        publicKey: {
+          type: 'string',
+          description: 'Public key (base58)'
+        },
+        cluster: {
+          type: 'string',
+          enum: ['devnet', 'testnet', 'mainnet-beta', 'localhost'],
+          description: 'Solana cluster (default: devnet)'
+        },
+        rpcUrl: {
+          type: 'string',
+          description: 'Custom RPC URL (optional)'
+        }
+      },
+      required: ['publicKey']
+    }
+  },
+  {
+    name: 'get_program_accounts',
+    description: 'Get all accounts owned by a program',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        programId: {
+          type: 'string',
+          description: 'Program ID (base58)'
+        },
+        cluster: {
+          type: 'string',
+          enum: ['devnet', 'testnet', 'mainnet-beta', 'localhost'],
+          description: 'Solana cluster (default: devnet)'
+        },
+        rpcUrl: {
+          type: 'string',
+          description: 'Custom RPC URL (optional)'
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum number of accounts to return (default: 10)'
+        },
+        filters: {
+          type: 'array',
+          description: 'Account data filters (dataSize or memcmp)'
+        }
+      },
+      required: ['programId']
+    }
+  },
+  {
+    name: 'parse_transaction',
+    description: 'Fetch and parse a Solana transaction',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        signature: {
+          type: 'string',
+          description: 'Transaction signature (base58)'
+        },
+        cluster: {
+          type: 'string',
+          enum: ['devnet', 'testnet', 'mainnet-beta', 'localhost'],
+          description: 'Solana cluster (default: devnet)'
+        },
+        rpcUrl: {
+          type: 'string',
+          description: 'Custom RPC URL (optional)'
+        }
+      },
+      required: ['signature']
+    }
   }
 ];
 
@@ -200,6 +337,21 @@ export async function createServer() {
                 break;
               case 'scan_security':
                 result = await scanSecurity(args);
+                break;
+              case 'derive_pda':
+                result = await derivePda(args);
+                break;
+              case 'get_account_info':
+                result = await getAccountInfo(args);
+                break;
+              case 'get_balance':
+                result = await getBalance(args);
+                break;
+              case 'get_program_accounts':
+                result = await getProgramAccounts(args);
+                break;
+              case 'parse_transaction':
+                result = await parseTransaction(args);
                 break;
               default:
                 throw new Error(`Unknown tool: ${name}`);
